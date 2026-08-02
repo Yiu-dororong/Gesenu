@@ -13,11 +13,75 @@ export interface paths {
         };
         /**
          * Health Check
-         * @description Return backend health and connection status.
+         * @description Return backend health and Supabase connection status.
          */
         get: operations["health_check_api_health_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/parse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Parse Japanese Sentence
+         * @description Parse a raw Japanese sentence using SudachiPy into tokenized words.
+         */
+        post: operations["parse_japanese_sentence_api_parse_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dict/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dictionary Lookup
+         * @description Look up dictionary entry, readings, meanings, and JLPT level via Jisho API.
+         */
+        get: operations["dictionary_lookup_api_dict_lookup_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/words": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Words
+         * @description Fetch Japanese vocabulary cards from Supabase PostgreSQL. Only falls back when server fails.
+         */
+        get: operations["get_words_api_words_get"];
+        put?: never;
+        /**
+         * Create Word
+         * @description Create and save a new word card in Supabase PostgreSQL.
+         */
+        post: operations["create_word_api_words_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -32,16 +96,16 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Test Words
-         * @description Fetch sample Japanese vocabulary cards from Supabase or fallback list.
+         * Get Words
+         * @description Fetch Japanese vocabulary cards from Supabase PostgreSQL. Only falls back when server fails.
          */
-        get: operations["get_test_words_api_test_words_get"];
+        get: operations["get_words_api_test_words_get"];
         put?: never;
         /**
-         * Create Test Word
-         * @description Create a new word card in Supabase or memory.
+         * Create Word
+         * @description Create and save a new word card in Supabase PostgreSQL.
          */
-        post: operations["create_test_word_api_test_words_post"];
+        post: operations["create_word_api_test_words_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -52,6 +116,34 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** DictLookupResponse */
+        DictLookupResponse: {
+            /**
+             * Lemma
+             * @example 解せる
+             */
+            lemma: string;
+            /**
+             * Reading
+             * @example かいせる
+             */
+            reading: string;
+            /**
+             * Meaning
+             * @example to understand; to comprehend
+             */
+            meaning: string;
+            /**
+             * Jlpt Level
+             * @example N1
+             */
+            jlpt_level?: string | null;
+            /**
+             * Found
+             * @example true
+             */
+            found: boolean;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -71,7 +163,7 @@ export interface components {
             app: string;
             /**
              * Version
-             * @example 0.1.0
+             * @example 0.2.0
              */
             version: string;
             /**
@@ -79,6 +171,56 @@ export interface components {
              * @example true
              */
             supabase_connected: boolean;
+        };
+        /** ParseSentenceRequest */
+        ParseSentenceRequest: {
+            /**
+             * Sentence
+             * @example 複雑な文法構造を分解すれば、どんな難文でも解せるようになる。
+             */
+            sentence: string;
+        };
+        /** ParseSentenceResponse */
+        ParseSentenceResponse: {
+            /** Sentence */
+            sentence: string;
+            /** Tokens */
+            tokens: components["schemas"]["TokenItem"][];
+            /** Candidate Count */
+            candidate_count: number;
+        };
+        /** TokenItem */
+        TokenItem: {
+            /**
+             * Surface
+             * @example 走った
+             */
+            surface: string;
+            /**
+             * Lemma
+             * @example 走る
+             */
+            lemma: string;
+            /**
+             * Reading
+             * @example はしる
+             */
+            reading: string;
+            /**
+             * Pos
+             * @example 動詞
+             */
+            pos: string;
+            /**
+             * Pos Detail
+             * @example 動詞-一般
+             */
+            pos_detail: string;
+            /**
+             * Is Selectable
+             * @example true
+             */
+            is_selectable: boolean;
         };
         /** ValidationError */
         ValidationError: {
@@ -176,7 +318,72 @@ export interface operations {
             };
         };
     };
-    get_test_words_api_test_words_get: {
+    parse_japanese_sentence_api_parse_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParseSentenceRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParseSentenceResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dictionary_lookup_api_dict_lookup_get: {
+        parameters: {
+            query: {
+                /** @description Target lemma or Japanese word */
+                keyword: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DictLookupResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_words_api_words_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -196,7 +403,60 @@ export interface operations {
             };
         };
     };
-    create_test_word_api_test_words_post: {
+    create_word_api_words_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WordCard"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WordCard"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_words_api_test_words_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WordCardResponse"];
+                };
+            };
+        };
+    };
+    create_word_api_test_words_post: {
         parameters: {
             query?: never;
             header?: never;
