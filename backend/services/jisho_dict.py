@@ -16,10 +16,10 @@ from __future__ import annotations
 
 import json
 import logging
+import urllib.error
 import urllib.parse
 import urllib.request
-import urllib.error
-from typing import Dict, Any, Optional
+from typing import Any
 
 logging.basicConfig(
     level=logging.INFO,
@@ -32,7 +32,7 @@ JISHO_API_URL = "https://jisho.org/api/v1/search/words?keyword="
 USER_AGENT = "GesenuVocabularyApp/1.0 (Japanese Context Learning Tool)"
 
 
-def lookup_word(keyword: str) -> Dict[str, Any]:
+def lookup_word(keyword: str) -> dict[str, Any]:
     """Look up dictionary entry for a keyword via Jisho API.
 
     Args:
@@ -86,19 +86,26 @@ def lookup_word(keyword: str) -> Dict[str, Any]:
                         if pos:
                             pos_tags.extend(pos)
 
-                    meaning_str = " | ".join(definitions) if definitions else "No definition found"
+                    meaning_str = (" | ".join(definitions) if definitions
+                                   else "No definition found")
 
                     # Format JLPT level (e.g. ['jlpt-n1'] -> "N1")
-                    jlpt_level: Optional[str] = None
+                    jlpt_level: str | None = None
                     if jlpt_tags:
                         tag = jlpt_tags[0].lower()
-                        if "n1" in tag: jlpt_level = "N1"
-                        elif "n2" in tag: jlpt_level = "N2"
-                        elif "n3" in tag: jlpt_level = "N3"
-                        elif "n4" in tag: jlpt_level = "N4"
-                        elif "n5" in tag: jlpt_level = "N5"
+                        if "n1" in tag:
+                            jlpt_level = "N1"
+                        elif "n2" in tag:
+                            jlpt_level = "N2"
+                        elif "n3" in tag:
+                            jlpt_level = "N3"
+                        elif "n4" in tag:
+                            jlpt_level = "N4"
+                        elif "n5" in tag:
+                            jlpt_level = "N5"
 
-                    log.info("✓ Jisho API returned entry for '%s' (%s)", primary_word, jlpt_level or "No JLPT")
+                    log.info("✓ Jisho API returned entry for '%s' (%s)",
+                             primary_word, jlpt_level or "No JLPT")
                     return {
                         "lemma": primary_word or keyword,
                         "reading": primary_reading,

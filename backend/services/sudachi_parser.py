@@ -16,7 +16,8 @@ Usage:
 from __future__ import annotations
 
 import logging
-from typing import List, Dict, Any, Tuple
+from typing import Any
+
 from sudachipy import dictionary, tokenizer
 
 logging.basicConfig(
@@ -65,7 +66,7 @@ def katakana_to_hiragana(katakana_str: str) -> str:
     return "".join(result)
 
 
-def parse_sentence(sentence: str) -> List[Dict[str, Any]]:
+def parse_sentence(sentence: str) -> list[dict[str, Any]]:
     """Parse a raw Japanese sentence into structured token candidates.
 
     Args:
@@ -93,7 +94,7 @@ def parse_sentence(sentence: str) -> List[Dict[str, Any]]:
 
     # Tokenize using Mode C (best for phrase/word boundary extraction)
     tokens = _TOKENIZER.tokenize(sentence, tokenizer.Tokenizer.SplitMode.C)
-    parsed_result: List[Dict[str, Any]] = []
+    parsed_result: list[dict[str, Any]] = []
 
     for token in tokens:
         surface = token.surface()
@@ -101,7 +102,7 @@ def parse_sentence(sentence: str) -> List[Dict[str, Any]]:
         reading_kata = token.reading_form()
         reading_hira = katakana_to_hiragana(reading_kata)
 
-        pos_tuple: Tuple[str, ...] = token.part_of_speech()
+        pos_tuple: tuple[str, ...] = token.part_of_speech()
         pos_primary = pos_tuple[0] if len(pos_tuple) > 0 else "その他"
         pos_secondary = pos_tuple[1] if len(pos_tuple) > 1 else "*"
 

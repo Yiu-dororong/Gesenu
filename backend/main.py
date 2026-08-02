@@ -12,17 +12,22 @@ Usage:
   uvicorn main:app --reload --port 8000
 """
 
+# Import NLP & Dictionary services
+
+
 from __future__ import annotations
 
 import logging
 import os
 import sys
-from typing import List, Optional
 from pathlib import Path
 
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+
+from services.jisho_dict import lookup_word
+from services.sudachi_parser import parse_sentence
 
 # Ensure backend directory is in python search path
 BACKEND_DIR = Path(__file__).resolve().parent
@@ -35,9 +40,6 @@ try:
 except ImportError:
     pass
 
-# Import NLP & Dictionary services
-from services.sudachi_parser import parse_sentence
-from services.jisho_dict import lookup_word
 
 # Supabase imports
 try:
@@ -58,10 +60,14 @@ log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 APP_VERSION = "0.2.0"
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip()
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip() or os.getenv("SUPABASE_ANON_KEY", "").strip()
+SUPABASE_KEY = (os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+                or os.getenv("SUPABASE_ANON_KEY", "").strip())
 
-supabase_client: Optional[Client] = None
-if HAS_SUPABASE and SUPABASE_URL and SUPABASE_KEY and "your_supabase_url" not in SUPABASE_URL:
+supabase_client: Client | None = None
+if (HAS_SUPABASE
+    and SUPABASE_URL
+    and SUPABASE_KEY
+    and "your_supabase_url" not in SUPABASE_URL):
     try:
         supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
         log.info("✓ Connected to Supabase client in FastAPI")
@@ -88,12 +94,13 @@ class TokenItem(BaseModel):
 
 
 class ParseSentenceRequest(BaseModel):
-    sentence: str = Field(..., example="複雑な文法構造を分解すれば、どんな難文でも解せるようになる。")
+    sentence: str = Field(..., example="複雑な文法構造を分解すれば、"
+                          "どんな難文でも解せるようになる。")
 
 
 class ParseSentenceResponse(BaseModel):
     sentence: str
-    tokens: List[TokenItem]
+    tokens: list[TokenItem]
     candidate_count: int
 
 
@@ -101,28 +108,29 @@ class DictLookupResponse(BaseModel):
     lemma: str = Field(..., example="解せる")
     reading: str = Field(..., example="かいせる")
     meaning: str = Field(..., example="to understand; to comprehend")
-    jlpt_level: Optional[str] = Field(None, example="N1")
+    jlpt_level: str | None = Field(None, example="N1")
     found: bool = Field(..., example=True)
 
 
 class WordCard(BaseModel):
-    id: Optional[str] = Field(None, example="123e4567-e89b-12d3-a456-426614174000")
+    id: str | None = Field(None, example="123e4567-e89b-12d3-a456-426614174000")
     lemma: str = Field(..., example="解せる")
     reading: str = Field(..., example="かいせる")
     meaning: str = Field(..., example="to make sense of; comprehend")
-    jlpt_level: Optional[str] = Field(None, example="N1")
-    context_sentence: str = Field(..., example="複雑な文法構造を分解すれば、どんな難文でも解せるようになる。")
+    jlpt_level: str | None = Field(None, example="N1")
+    context_sentence: str = Field(..., example="複雑な文法構造を分解すれば、"
+                                  "どんな難文でも解せるようになる。")
     status: str = Field("New", example="Learning")
 
 
 class WordCardResponse(BaseModel):
-    words: List[WordCard]
+    words: list[WordCard]
     source: str = Field(..., example="supabase")
     message: str = Field(..., example="Fetched successfully")
 
 
 # Memory fallback storage
-FALLBACK_WORDS: List[WordCard] = [
+FALLBACK_WORDS: list[WordCard] = [
     WordCard(
         id="sample-1",
         lemma="解せる",
@@ -148,13 +156,17 @@ FALLBACK_WORDS: List[WordCard] = [
 # ---------------------------------------------------------------------------
 app = FastAPI(
     title="Gesenu API",
-    description="Context-First Japanese Vocabulary Learning API with Sudachi & Jisho Engine",
+    description="Context-First Japanese Vocabulary Learning API"
+    " with Sudachi & Jisho Engine",
     version=APP_VERSION,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5174", "*"],
+    allow_origins=["http://localhost:5173",
+                   "http://127.0.0.1:5173",
+                   "http://localhost:5174",
+                   "*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -178,7 +190,7 @@ def parse_japanese_sentence(req: ParseSentenceRequest) -> ParseSentenceResponse:
     log.info("Parsing sentence: '%s'", req.sentence)
     parsed_tokens = parse_sentence(req.sentence)
     candidates = [t for t in parsed_tokens if t["is_selectable"]]
-    
+
     return ParseSentenceResponse(
         sentence=req.sentence,
         tokens=[TokenItem(**t) for t in parsed_tokens],
@@ -187,7 +199,9 @@ def parse_japanese_sentence(req: ParseSentenceRequest) -> ParseSentenceResponse:
 
 
 @app.get("/api/dict/lookup", response_model=DictLookupResponse, tags=["Dictionary"])
-def dictionary_lookup(keyword: str = Query(..., description="Target lemma or Japanese word")) -> DictLookupResponse:
+def dictionary_lookup(
+    keyword: str = Query(..., description="Target lemma or Japanese word")
+    ) -> DictLookupResponse:
     """Look up dictionary entry, readings, meanings, and JLPT level via Jisho API."""
     info = lookup_word(keyword)
     return DictLookupResponse(**info)
@@ -196,7 +210,8 @@ def dictionary_lookup(keyword: str = Query(..., description="Target lemma or Jap
 @app.get("/api/test-words", response_model=WordCardResponse, tags=["Vocabulary"])
 @app.get("/api/words", response_model=WordCardResponse, tags=["Vocabulary"])
 def get_words() -> WordCardResponse:
-    """Fetch Japanese vocabulary cards from Supabase PostgreSQL. Only falls back when server fails."""
+    """Fetch Japanese vocabulary cards from Supabase PostgreSQL.
+    Only falls back when server fails."""
     if supabase_client is not None:
         try:
             res = supabase_client.table("test_words").select("*").execute()
@@ -204,14 +219,16 @@ def get_words() -> WordCardResponse:
             return WordCardResponse(
                 words=words,
                 source="supabase",
-                message=f"Successfully fetched {len(words)} cards live from Supabase PostgreSQL!"
+                message=f"Successfully fetched {len(words)} cards"
+                " live from Supabase PostgreSQL!"
             )
         except Exception as e:
             log.error("❌ Supabase query failed (%s). Using fallback dataset.", e)
             return WordCardResponse(
                 words=FALLBACK_WORDS,
                 source="fallback_on_server_failure",
-                message=f"Server/Database Query Failed ({type(e).__name__}). Using fallback sample words."
+                message=f"Server/Database Query Failed ({type(e).__name__})."
+                " Using fallback sample words."
             )
 
     log.error("❌ Supabase client is not initialized. Using fallback dataset.")
