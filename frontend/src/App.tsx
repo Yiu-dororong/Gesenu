@@ -8,7 +8,7 @@ type WordCard = components['schemas']['WordCard'];
 type WordCardResponse = components['schemas']['WordCardResponse'];
 type HealthCheckStatus = components['schemas']['HealthCheckStatus'];
 
-const API_BASE = 'http://127.0.0.1:8000';
+const API_BASE = import.meta.env.VITE_API_BASE || '';
 
 const NEXT_STATUS: Record<string, string> = {
   New: 'Learning',
