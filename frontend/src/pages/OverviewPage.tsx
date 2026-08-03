@@ -25,14 +25,13 @@ export function OverviewPage({
         <h2>
           Welcome back, <span className="highlight">{userEmail.split('@')[0]}</span>
         </h2>
-        <p className="sub">Select a function to continue your study loop</p>
       </div>
 
       {/* 3 Function Tiles */}
       <section className="tiles-grid">
         {/* Tile 1: Encounter */}
         <div className="function-tile tile-encounter" onClick={() => onNavigate('encounter')}>
-          <div className="tile-badge encounter-badge">01</div>
+          <div className="tile-badge encounter-badge">🗻</div>
           <h3 className="jp-font">Encounter</h3>
           <p className="tile-desc">Parse Japanese sentences & save vocabulary to target decks.</p>
           <div className="tile-action">Parse New Sentence →</div>
@@ -40,7 +39,7 @@ export function OverviewPage({
 
         {/* Tile 2: Study */}
         <div className="function-tile tile-study" onClick={() => onNavigate('study_arc')}>
-          <div className="tile-badge study-badge">02</div>
+          <div className="tile-badge study-badge">🦅</div>
           <h3 className="jp-font">Study</h3>
           <p className="tile-desc">Browse deck arc & review flashcards with optimistic status pills.</p>
 
@@ -58,7 +57,7 @@ export function OverviewPage({
 
         {/* Tile 3: Test */}
         <div className="function-tile tile-test" onClick={onOpenTestSetup}>
-          <div className="tile-badge test-badge">03</div>
+          <div className="tile-badge test-badge">🍆</div>
           <h3 className="jp-font">Test</h3>
           <p className="tile-desc">Masked sentence recall sessions over selected decks.</p>
 

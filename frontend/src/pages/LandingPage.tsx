@@ -8,16 +8,15 @@ interface LandingPageProps {
 const SUIT_COLORS = ['#2E4A3B', '#C1546F', '#C79A44', '#B0512E', '#2F6B6B'];
 
 const N5_PAIRS = [
-  ['走った', '走る'], ['食べます', '食べる'], ['飲んだ', '飲む'], ['見ました', '見る'],
-  ['書いて', '書く'], ['話した', '話す'], ['読みます', '読む'], ['買った', '買う'],
-  ['行きます', '行く'], ['聞いた', '聞く'], ['待って', '待つ'], ['使います', '使う'],
-  ['忙しかった', '忙しい'], ['高くない', '高い'], ['大きくて', '大きい'], ['好きでした', '好き'],
-  ['静かな', '静か'], ['難しかった', '難しい'], ['早く', '早い'], ['楽しかった', '楽しい'],
-  ['泳いだ', '泳ぐ'], ['死んで', '死ぬ'], ['遊びました', '遊ぶ'], ['作った', '作る'],
-  ['教えて', '教える'], ['起きます', '起きる'], ['寝ました', '寝る'], ['分かった', '分かる'],
-  ['歩いた', '歩く'], ['洗った', '洗う'], ['開けました', '開ける'], ['閉めた', '閉める'],
-  ['入った', '入る'], ['出た', '出る'], ['置いた', '置く'], ['取った', '取る'],
-  ['呼んだ', '呼ぶ'], ['送った', '送る'], ['貸した', '貸す'], ['借りた', '借りる'],
+  // 動詞(I/II/III/複合)　名詞　擬声語・擬態語　カタカナ　形容詞・形容動詞
+  ['見据えている', '見据える'],  ['社会現象', '現象'],  ['じわじわ広がる', 'じわじわ'],  ['コンセプト', 'コンセプト'],  ['曖昧だった', '曖昧'],
+  ['くたびれた', '草臥れる'],  ['買い物してきた', '買い物する'],  ['うろうろしている', 'うろうろ'],  ['コンビニ', 'コンビニ'],  ['面倒くさかった', '面倒臭い'],
+  ['泣きそうになった', '泣く'],  ['昔の思い出', '思い出'],  ['ドキドキしている', 'ドキドキ'],  ['メンタル', 'メンタル'],  ['切なかった', '切ない'],
+  ['取り組んでいる', '取り組む'],  ['課題解決', '解決'],  ['着々と', '着々'],  ['プロジェクト', 'プロジェクト'],  ['複雑ではない', '複雑'],
+  ['炎上した', '炎上する'],  ['SNS上で投稿', '投稿'],  ['めちゃくちゃ', 'めちゃくちゃ'],  ['コメント', 'コメント'],  ['やばくない', 'やばい'],
+  ['散歩しましょう', '散歩する'], ['天気予報', '天気'],  ['ぶらぶら', 'ぶらぶら'],  ['カフェ', 'カフェ'], ['良かった', '良い'], 
+  ['ハマっている', 'ハマる'],  ['かわいすぎる', 'かわいい'],  ['推し', '推し'],  ['キラキラ', 'キラキラ'],  ['アイドル', 'アイドル'],
+  ['身につけた', '身につける'],  ['言の葉の庭', '言の葉'],  ['じっくり', 'じっくり'],  ['アプリ', 'アプリ'],  ['便利じゃない', '便利'],
 ];
 
 function lerp(a: number, b: number, t: number) {
@@ -143,8 +142,8 @@ export function LandingPage({
           cardProgress: 0,
           fanProgress: 0,
 
-          baseAlpha: rand(0.65, 0.95),
-          size: rand(15, 18),
+          baseAlpha: rand(0.85, 1.0),
+          size: rand(16, 19),
         };
       });
     };
@@ -200,7 +199,7 @@ export function LandingPage({
       currentSection = lerp(currentSection, targetSection, 0.08);
 
       // In Section 4, sort particles by deckIndex & cardInSuitIndex so fanned decks stack cleanly
-      const drawOrder = currentSection > 3.2
+      const drawOrder = currentSection > 3.1
         ? [...particles].sort((a, b) => {
             if (a.deckIndex !== b.deckIndex) return a.deckIndex - b.deckIndex;
             return a.cardInSuitIndex - b.cardInSuitIndex;
@@ -214,7 +213,7 @@ export function LandingPage({
         let targetMorph = 0;
         let targetCard = 0;
         let targetFan = 0;
-        let targetAlpha = 0.25;
+        let targetAlpha = 0.4;
 
         if (currentSection < 0.5) {
           // SECTION 0: HERO (Sparse drift)
@@ -225,7 +224,7 @@ export function LandingPage({
           targetX = p.x;
           targetY = p.y;
           targetRot = p.rot;
-          targetAlpha = lerp(0.2, 0.55, Math.max(0, currentSection / 0.5));
+          targetAlpha = lerp(0.4, 0.75, Math.max(0, currentSection / 0.5));
         } else if (currentSection < 1.4) {
           // SECTION 1: PROBLEM (Chaos tumbling)
           const blend = (currentSection - 0.5) / 0.9;
@@ -244,7 +243,7 @@ export function LandingPage({
           targetRot = p.rot;
           targetMorph = 0;
           targetCard = 0;
-          targetAlpha = lerp(0.55, 0.7, blend);
+          targetAlpha = lerp(0.75, 0.88, blend);
         } else if (currentSection < 2.3) {
           // SECTION 2: WHY GESENU (Grid + Morph surface -> lemma)
           const blend = Math.max(0, Math.min(1, (currentSection - 1.4) / 0.9));
@@ -253,7 +252,7 @@ export function LandingPage({
           targetRot = 0;
           targetMorph = blend;
           targetCard = 0;
-          targetAlpha = lerp(0.7, 0.8, blend);
+          targetAlpha = lerp(0.88, 0.96, blend);
         } else if (currentSection < 3.1) {
           // SECTION 3: HOW IT WORKS (Grid + Card faces resolve)
           const blend = Math.max(0, Math.min(1, (currentSection - 2.3) / 0.8));
@@ -262,7 +261,7 @@ export function LandingPage({
           targetRot = 0;
           targetMorph = 1;
           targetCard = blend;
-          targetAlpha = lerp(0.8, 0.88, blend);
+          targetAlpha = lerp(0.96, 1.0, blend);
         } else {
           // SECTION 4: INVITATION (Cards leave 5 grid rows & sink down to 1 bottom row into 5 color stacks)
           const blend = Math.max(0, Math.min(1, (currentSection - 3.1) / 0.9));
@@ -272,7 +271,7 @@ export function LandingPage({
           targetMorph = 1;
           targetCard = 1;
           targetFan = blend;
-          targetAlpha = lerp(0.88, 0.95, blend);
+          targetAlpha = 1.0;
         }
 
         // Faster lerp in section 4 for crisp convergence
@@ -325,16 +324,22 @@ export function LandingPage({
 
         const offsetY = p.cardProgress > 0.01 ? 8 : 0;
 
-        if (p.morphProgress < 0.99) {
-          ctx.globalAlpha = alpha * (1 - p.morphProgress);
+        // Surface fades out over morphProgress 0 → 0.45
+        if (p.morphProgress < 0.45) {
+          const surfFade = Math.max(0, 1 - p.morphProgress / 0.45);
+          const surfY = offsetY - p.morphProgress * 10;
+          ctx.globalAlpha = alpha * surfFade;
           ctx.fillStyle = '#F2E9DA';
-          ctx.fillText(p.surface, 0, offsetY);
+          ctx.fillText(p.surface, 0, surfY);
         }
 
-        if (p.morphProgress > 0.01) {
-          ctx.globalAlpha = alpha * p.morphProgress;
+        // Lemma fades in quickly over 0.55 → 0.75, then stays at full alpha
+        if (p.morphProgress > 0.55) {
+          const lemFade = Math.min(1, (p.morphProgress - 0.55) / 0.2);
+          const lemY = offsetY + Math.max(0, (1 - p.morphProgress)) * 10;
+          ctx.globalAlpha = alpha * lemFade;
           ctx.fillStyle = '#C79A44';
-          ctx.fillText(p.lemma, 0, offsetY);
+          ctx.fillText(p.lemma, 0, lemY);
         }
 
         ctx.restore();

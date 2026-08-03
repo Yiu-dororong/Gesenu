@@ -745,12 +745,6 @@ html, body {
 }
 .hub-welcome .highlight { color: var(--gold); }
 
-.sub {
-  font-size: 0.9rem;
-  color: var(--ivory-dim);
-  margin-top: 0.35rem;
-}
-
 .tiles-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
