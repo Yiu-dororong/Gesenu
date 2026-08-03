@@ -73,7 +73,8 @@ export interface paths {
         };
         /**
          * Get Words
-         * @description Fetch Japanese vocabulary cards from Supabase PostgreSQL. Only falls back when server fails.
+         * @description Fetch Japanese vocabulary cards from Supabase PostgreSQL.
+         *     Only falls back when server fails.
          */
         get: operations["get_words_api_words_get"];
         put?: never;
@@ -97,7 +98,8 @@ export interface paths {
         };
         /**
          * Get Words
-         * @description Fetch Japanese vocabulary cards from Supabase PostgreSQL. Only falls back when server fails.
+         * @description Fetch Japanese vocabulary cards from Supabase PostgreSQL.
+         *     Only falls back when server fails.
          */
         get: operations["get_words_api_test_words_get"];
         put?: never;

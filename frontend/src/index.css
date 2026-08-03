@@ -321,26 +321,99 @@ html, body {
 .logout-btn:hover { color: var(--vermilion); }
 
 /* ==================================================== */
-/* LANDING PAGE — MINIMALIST PRODUCT NARRATIVE DESIGN */
+/* LANDING PAGE — SCROLLYTELLING PRODUCT NARRATIVE DESIGN */
 /* ==================================================== */
-.landing-screen {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 4rem 1.5rem 6rem;
-  display: flex;
-  flex-direction: column;
-  gap: 5rem;
+.landing-wrapper {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--ink);
 }
 
-.landing-hero {
+.landing-bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.landing-scroller {
   position: relative;
-  text-align: center;
-  padding: 3rem 0 1rem;
-  overflow: hidden;
-  min-height: 60vh;
+  z-index: 1;
+  height: 100vh;
+  overflow-y: scroll;
+  scroll-snap-type: y proximity;
+  scroll-behavior: smooth;
+}
+
+.landing-snap-section {
+  min-height: 100vh;
+  scroll-snap-align: start;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
+  padding: 2.5rem 1.5rem;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.landing-transparent-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 840px;
+  background: transparent;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ivory-dim);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  transition: opacity 0.2s, color 0.2s;
+}
+.scroll-hint:hover {
+  color: var(--gold);
+}
+.scroll-hint:hover .chevron {
+  border-color: var(--gold);
+}
+
+.chevron {
+  width: 16px;
+  height: 16px;
+  border-right: 2px solid var(--ivory-dim);
+  border-bottom: 2px solid var(--ivory-dim);
+  transform: rotate(45deg);
+  animation: bob 1.8s ease-in-out infinite;
+}
+
+@keyframes bob {
+  0%, 100% { transform: rotate(45deg) translate(0, 0); }
+  50% { transform: rotate(45deg) translate(4px, 4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron { animation: none; }
+  .landing-scroller { scroll-behavior: auto; }
 }
 
 .hero-kana-bg {
@@ -378,6 +451,7 @@ html, body {
   color: var(--ivory);
   margin-bottom: 1.5rem;
   font-weight: 600;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
 }
 
 .hero-lead {
@@ -385,6 +459,7 @@ html, body {
   color: var(--ivory-dim);
   line-height: 1.6;
   margin-bottom: 2.2rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
 }
 .hero-lead em {
   color: var(--ivory);
@@ -458,24 +533,26 @@ html, body {
   color: var(--ivory);
   font-weight: 600;
   margin-bottom: 0.5rem;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
 }
 
-/* Problem Grid */
+/* Problem Grid - Transparent minimalism */
 .problem-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  text-align: left;
+  margin-top: 1.5rem;
 }
 
 .problem-item {
-  background: var(--ink-card);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 1.75rem;
+  background: rgba(21, 18, 27, 0.4);
+  border-left: 2px solid var(--gold);
+  padding: 1rem 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
+  border-radius: 0 8px 8px 0;
 }
 
 .problem-kanji {
@@ -486,33 +563,35 @@ html, body {
 }
 
 .problem-item h3 {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   color: var(--ivory);
+  margin: 0;
 }
 
 .problem-item p {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   color: var(--ivory-dim);
   line-height: 1.55;
+  margin: 0;
 }
 
-/* Why Grid (Hanafuda Inspired Cards) */
+/* Why Grid (Transparent cards with Hanafuda subtle left border) */
 .why-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.25rem;
+  text-align: left;
+  margin-top: 1.5rem;
 }
 
 .why-card {
-  background: var(--ink-card);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 1.5rem 1.5rem 1.5rem 1.9rem;
+  background: rgba(21, 18, 27, 0.4);
+  padding: 1rem 1rem 1rem 1.25rem;
   position: relative;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.5rem;
+  border-radius: 0 8px 8px 0;
 }
 
 .why-card::before {
@@ -520,8 +599,9 @@ html, body {
   position: absolute;
   top: 0;
   left: 0;
-  width: 4px;
+  width: 3px;
   height: 100%;
+  border-radius: 2px;
 }
 
 .why-pine::before { background: var(--pine); }
@@ -536,52 +616,82 @@ html, body {
 }
 
 .why-card h3 {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   color: var(--ivory);
+  margin: 0;
 }
 
 .why-card p {
-  font-size: 0.875rem;
+  font-size: 0.825rem;
   color: var(--ivory-dim);
   line-height: 1.5;
+  margin: 0;
 }
 
-/* How Steps */
-.how-steps {
-  display: flex;
-  align-items: flex-start;
+/* How Steps — Strict 3-column single row layout */
+.how-steps-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
-  flex-wrap: wrap;
+  text-align: left;
+  margin-top: 1.5rem;
+  width: 100%;
 }
 
 .how-step {
-  flex: 1;
-  min-width: 220px;
-  background: var(--ink-card);
-  border: 1px solid var(--border-color);
+  background: rgba(21, 18, 27, 0.4);
+  border: 1px solid rgba(242, 233, 218, 0.1);
   border-radius: 12px;
-  padding: 1.75rem;
+  padding: 1.25rem 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .how-num {
-  font-size: 2rem;
+  font-size: 1.6rem;
   color: var(--gold);
   font-weight: 700;
   line-height: 1;
 }
 
 .how-step h3 {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   color: var(--ivory);
+  margin: 0;
 }
 
 .how-step p {
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   color: var(--ivory-dim);
   line-height: 1.55;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .problem-grid, .why-grid, .how-steps-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.how-num {
+  font-size: 1.8rem;
+  color: var(--gold);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.how-step h3 {
+  font-size: 1.05rem;
+  color: var(--ivory);
+  margin: 0;
+}
+
+.how-step p {
+  font-size: 0.85rem;
+  color: var(--ivory-dim);
+  line-height: 1.55;
+  margin: 0;
 }
 
 .how-arrow {
@@ -597,10 +707,10 @@ html, body {
 
 .landing-cta-final {
   text-align: center;
-  background: var(--ink-card);
-  border: 1px solid var(--border-accent);
-  border-radius: 18px;
-  padding: 3rem 2rem;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 1rem;
 }
 
 .cta-kana {
