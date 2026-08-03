@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface LandingPageProps {
   onLoginGuest: () => void;
@@ -33,6 +33,40 @@ export function LandingPage({
 }: LandingPageProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const [demoStage, setDemoStage] = useState<0 | 1 | 2>(0);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [deckPositions, setDeckPositions] = useState<{ x: number; y: number }[]>([]);
+
+  const TEST_OPTIONS = [
+    { surface: '身につけた', lemma: '身につける' },
+    { surface: '言の葉の庭', lemma: '言の葉' },
+    { surface: 'じっくり', lemma: 'じっくり' },
+    { surface: 'アプリ', lemma: 'アプリ' },
+    { surface: '便利じゃない', lemma: '便利' },
+  ];
+
+  // Keep deck positions in sync with the canvas layout so hit areas overlay exactly
+  const computeDeckPositions = () => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const pivotX = w / 2;
+    const pivotY = h * 0.83;
+    const deckSpacing = Math.min(w * 0.17, 180);
+    return [0, 1, 2, 3, 4].map((deckIdx) => {
+      const deckOffset = deckIdx - 2;
+      return {
+        x: pivotX + deckOffset * deckSpacing,
+        y: pivotY + Math.pow(deckOffset, 2) * 14,
+      };
+    });
+  };
+
+  useEffect(() => {
+    const update = () => setDeckPositions(computeDeckPositions());
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -512,16 +546,147 @@ export function LandingPage({
             <p className="cta-sub">
               Build your custom vocabulary deck collection and turn everyday confusion into structured knowledge.
             </p>
+
+            {/* Micro 3-Stage Pipeline Demo Preview */}
+            <div
+              className={`cta-demo-strip stage-${demoStage} ${
+                isCorrect === true ? 'is-correct' : isCorrect === false ? 'is-wrong' : ''
+              }`}
+              onClick={() => {
+                if (demoStage === 2 && isCorrect) {
+                  setDemoStage(0);
+                  setIsCorrect(null);
+                } else if (demoStage < 2) {
+                  setDemoStage((prev) => (prev + 1) as 1 | 2);
+                }
+              }}
+              title="Click to toggle pipeline stages"
+            >
+              <div className="cta-demo-hint">
+                {demoStage === 0 && '🖱️ Step 1: Click to parse sentence'}
+                {demoStage === 1 && '⚡ Step 2: Parsed! Hover keywords for meanings (Click again for Recall Test)'}
+                {demoStage === 2 && isCorrect && '🎉 Step 3: 解せる！ (Correct! Click to reset)'}
+                {demoStage === 2 && !isCorrect && '🎯 Step 3: Select the matching word from the 5 background decks below!'}
+              </div>
+
+              {/* STAGE 0: Whole Sentence */}
+              {demoStage === 0 && (
+                <div className="cta-sentence-whole jp-font">
+                  「このアプリで言葉をじっくり勉強しています。」
+                </div>
+              )}
+
+              {/* STAGE 1 & 2: Token Chips */}
+              {demoStage !== 0 && (
+                <div className="cta-demo-tokens">
+                  <div className="cta-token-card grammar">
+                    <span className="token-jp jp-font">この</span>
+                  </div>
+                  <div className="cta-token-card keyword">
+                    <span className="token-jp jp-font">アプリ</span>
+                    {demoStage === 1 && <span className="token-en">app</span>}
+                  </div>
+                  <div className="cta-token-card grammar">
+                    <span className="token-jp jp-font">で</span>
+                  </div>
+                  <div className="cta-token-card keyword">
+                    <span className="token-jp jp-font">言葉</span>
+                    {demoStage === 1 && <span className="token-en">words</span>}
+                  </div>
+                  <div className="cta-token-card grammar">
+                    <span className="token-jp jp-font">を</span>
+                  </div>
+
+                  {/* Target Token: じっくり (Blank in Stage 2 until solved) */}
+                  <div
+                    className={`cta-token-card keyword target-blank ${
+                      demoStage === 2 ? 'is-masked' : ''
+                    } ${isCorrect ? 'is-filled' : ''}`}
+                  >
+                    <span className="token-jp jp-font">
+                      {demoStage === 2 ? (isCorrect ? 'じっくり' : '＿＿＿') : 'じっくり'}
+                    </span>
+                    {demoStage === 1 && <span className="token-en">thoroughly</span>}
+                    {demoStage === 2 && isCorrect && (
+                      <span className="token-en">thoroughly ✓</span>
+                    )}
+                  </div>
+
+                  <div className="cta-token-card keyword">
+                    <span className="token-jp jp-font">勉強</span>
+                    {demoStage === 1 && <span className="token-en">study</span>}
+                  </div>
+                  <div className="cta-token-card grammar">
+                    <span className="token-jp jp-font">し</span>
+                  </div>
+                  <div className="cta-token-card grammar">
+                    <span className="token-jp jp-font">て</span>
+                  </div>
+                  <div className="cta-token-card grammar">
+                    <span className="token-jp jp-font">い</span>
+                  </div>
+                  <div className="cta-token-card grammar">
+                    <span className="token-jp jp-font">ます</span>
+                  </div>
+                  <div className="cta-token-card punctuation">
+                    <span className="token-jp jp-font">。</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="hero-cta-group">
-              <button className="btn-primary hero-btn" onClick={onLoginGuest}>
+              <button
+                className="btn-primary hero-btn"
+                onClick={onLoginGuest}
+              >
                 Open with Guest Decks
               </button>
-              <button className="btn-outline hero-btn" onClick={onShowAuthModal}>
+              <button
+                className="btn-outline hero-btn"
+                onClick={onShowAuthModal}
+              >
                 Sign In
               </button>
             </div>
+
           </div>
         </section>
+
+        {/* STAGE 2: Invisible hit areas at exact canvas deck positions */}
+        {demoStage === 2 && deckPositions.length === 5 && (
+          <div className="deck-hit-layer">
+            {TEST_OPTIONS.map((opt, idx) => {
+              const pos = deckPositions[idx];
+              const isTarget = opt.lemma === 'じっくり';
+
+              return (
+                <button
+                  key={opt.lemma}
+                  className="deck-hit-area"
+                  style={{
+                    left: pos.x,
+                    top: pos.y,
+                  }}
+                  onClick={() => {
+                    if (isTarget) {
+                      setIsCorrect(true);
+                    } else {
+                      setIsCorrect(null);
+                      setTimeout(() => {
+                        setIsCorrect(false);
+                        setTimeout(() => {
+                          setIsCorrect(null);
+                        }, 500);
+                      }, 10);
+                    }
+                  }}
+                  aria-label={opt.surface}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

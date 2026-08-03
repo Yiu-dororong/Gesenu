@@ -340,7 +340,241 @@
 .cta-sub {
   font-size: 1rem;
   color: var(--ivory-dim);
-  margin-bottom: 1.8rem;
+  margin-bottom: 1.2rem;
+}
+
+/* Micro Sentence Destructuring Preview */
+.cta-demo-strip {
+  background: rgba(21, 18, 27, 0.45);
+  border: 1px solid rgba(199, 154, 68, 0.2);
+  border-radius: 16px;
+  min-height: 120px;
+  padding: 0.85rem 1.25rem;
+  margin: 0 auto 1.8rem;
+  max-width: 680px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.cta-demo-strip:hover {
+  border-color: rgba(199, 154, 68, 0.45);
+}
+
+.cta-demo-strip.stage-1,
+.cta-demo-strip.stage-2 {
+  background: rgba(21, 18, 27, 0.88);
+  border-color: var(--gold);
+  box-shadow: 0 12px 40px rgba(199, 154, 68, 0.22);
+}
+
+.cta-demo-hint {
+  font-size: 0.725rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ivory-dim);
+  margin-bottom: 0.65rem;
+  font-weight: 600;
+  transition: color 0.3s ease;
+  flex-shrink: 0;
+}
+
+.cta-demo-strip.stage-1 .cta-demo-hint,
+.cta-demo-strip.stage-2 .cta-demo-hint {
+  color: var(--gold);
+}
+
+/* PRE-PARSE: whole sentence */
+.cta-sentence-whole {
+  font-size: 1.15rem;
+  color: var(--ivory);
+  letter-spacing: 0.04em;
+  font-weight: 500;
+  padding: 0.4rem 0;
+}
+
+/* POST-PARSE: token chips */
+.cta-demo-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.cta-token-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.3rem 0.5rem;
+  border-radius: 8px;
+  background: rgba(242, 233, 218, 0.04);
+  border: 1px solid var(--border-color);
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.cta-token-card.keyword {
+  background: rgba(199, 154, 68, 0.12);
+  border-color: rgba(199, 154, 68, 0.4);
+}
+
+.cta-token-card.punctuation {
+  border: none;
+  background: transparent;
+  padding: 0.3rem 0.05rem;
+}
+
+/* Hover for meanings in Stage 1 & 2 */
+.cta-demo-strip.stage-1 .cta-token-card.keyword:hover,
+.cta-demo-strip.stage-2 .cta-token-card.keyword:hover {
+  background: rgba(199, 154, 68, 0.25);
+  border-color: var(--gold);
+  box-shadow: 0 4px 16px rgba(199, 154, 68, 0.25);
+  transform: translateY(-2px);
+}
+
+/* Target Blank Token in Stage 2 */
+.cta-token-card.target-blank.is-masked {
+  background: rgba(199, 154, 68, 0.15);
+  border: 1.5px dashed var(--gold);
+  min-width: 72px;
+}
+
+.cta-token-card.target-blank.is-filled {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1.5px solid #34d399;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+}
+
+.cta-token-card.target-blank.is-filled .token-jp {
+  color: #34d399;
+}
+
+.token-jp {
+  font-size: 1.05rem;
+  color: var(--ivory);
+  font-weight: 600;
+}
+
+.cta-token-card.keyword .token-jp {
+  color: var(--gold);
+}
+
+.cta-token-card.grammar .token-jp {
+  color: var(--ivory-dim);
+}
+
+/* Floating tooltip badge for Keyword Meaning */
+.token-en {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.8);
+  font-size: 0.68rem;
+  color: var(--gold);
+  background: #13101a;
+  border: 1px solid rgba(199, 154, 68, 0.7);
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.cta-token-card.keyword:hover .token-en {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+.cta-token-card.target-blank.is-filled .token-en {
+  color: #34d399;
+  border-color: #34d399;
+  animation: fadeOutBadge 1.8s forwards ease;
+}
+
+@keyframes fadeOutBadge {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.8);
+  }
+  15% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  65% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.95);
+  }
+}
+
+/* Correct / Wrong effects on the demo preview container */
+.cta-demo-strip.is-correct {
+  border-color: #34d399 !important;
+  box-shadow: 0 0 32px rgba(16, 185, 129, 0.7) !important;
+  background: rgba(16, 185, 129, 0.18) !important;
+  animation: none;
+}
+
+.cta-demo-strip.is-wrong {
+  border-color: #f87171 !important;
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.6) !important;
+  animation: shake 0.3s ease;
+}
+
+/* Stage 2: Deck hit areas — invisible boxes positioned over the canvas decks */
+.deck-hit-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 200;
+  opacity: 0%;
+}
+
+.deck-hit-area {
+  position: absolute;
+  /* Card size matches canvas: 76x106px. Center it on (x, y) */
+  width: 88px;
+  height: 120px;
+  transform: translate(-50%, -50%);
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.opt-surface {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.opt-lemma {
+  font-size: 0.725rem;
+  opacity: 0.8;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
 }
 
 @media (max-width: 900px) {
