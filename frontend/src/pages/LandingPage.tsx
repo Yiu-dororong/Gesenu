@@ -410,19 +410,19 @@ export function LandingPage({
         <section className="landing-snap-section" data-index="1">
           <div className="landing-transparent-content">
             <p className="section-label">The problem</p>
-            <h2 className="section-h2 jp-font">Every page is a sea of words<br />you almost recognize.</h2>
+            <h2 className="section-h2 jp-font">Japanese learning often leaves you<br />with scattered knowledge.</h2>
             <div className="problem-grid">
               <div className="problem-item">
-                <h3>Isolated words don't stay</h3>
-                <p>Vocabulary lists build weak memory. Words without a real sentence anchor evaporate quickly.</p>
+                <h3>Vocabulary is fragmented</h3>
+                <p>Managing new words from books, anime, news, and social media without losing context is difficult.</p>
               </div>
               <div className="problem-item">
-                <h3>Conjugation breaks lookup</h3>
-                <p>Searching <em>走った</em> yields nothing. The lemma <em>走る</em> is what you need to study.</p>
+                <h3>Generic lists waste effort</h3>
+                <p>Progress feels unfocused when pre-made vocabulary lists include some words you already know.</p>
               </div>
               <div className="problem-item">
-                <h3>Review has no clear structure</h3>
-                <p>Without defined status states, you over-review known words and neglect struggling cards.</p>
+                <h3>Meaning alone is not enough</h3>
+                <p>Without the original context and usage patterns, words remain fragile and hard to apply.</p>
               </div>
             </div>
           </div>
@@ -440,26 +440,22 @@ export function LandingPage({
         <section className="landing-snap-section" data-index="2">
           <div className="landing-transparent-content">
             <p className="section-label">Why Gesenu</p>
-            <h2 className="section-h2 jp-font">We find the word underneath the word</h2>
+            <h2 className="section-h2 jp-font">Every word belongs to its story.</h2>
             <p className="hero-lead" style={{ marginBottom: '1.2rem' }}>
-              <em>走った</em> isn't a new word to memorize — it's <em>走る</em>, conjugated. Gesenu automatically resolves inflected forms to dictionary lemmas.
+              Instead of isolated vocabulary, Gesenu stores each discovery together with its original sentence.
             </p>
             <div className="why-grid">
-              <div className="why-card why-pine">
-                <h3>Context-bound cards</h3>
-                <p>Every saved word carries the exact sentence you found it in.</p>
-              </div>
               <div className="why-card why-sakura">
-                <h3>SudachiPy morphology</h3>
-                <p>Paste any sentence. SudachiPy normalizes conjugated verbs & adjectives.</p>
+                <h3>Capture with context</h3>
+                <p>Paste any sentence. Sudachi extracts the words and keeps them bound to the original sentence.</p>
               </div>
               <div className="why-card why-maple">
-                <h3>Explicit state machine</h3>
-                <p>Track progress with defined transitions: New → Learning → Known → Mastered.</p>
+                <h3>Focus on what you don’t know</h3>
+                <p>Build your own decks instead of studying generic lists that mix known and unknown words.</p>
               </div>
               <div className="why-card why-wave">
-                <h3>Hanafuda deck collection</h3>
-                <p>Organise vocabulary into themed decks styled after traditional Japanese flower cards.</p>
+                <h3>Test in real context</h3>
+                <p>Generate tests that hide the target word in its original sentence, reinforcing both meaning and usage.</p>
               </div>
             </div>
           </div>
@@ -482,7 +478,7 @@ export function LandingPage({
               <div className="how-step">
                 <span className="how-num">1</span>
                 <h3>Encounter</h3>
-                <p>Paste a sentence. SudachiPy parses candidates and Jisho API fetches readings and definitions.</p>
+                <p>Paste a sentence. Sudachi parses candidates and Jisho API fetches readings and definitions.</p>
               </div>
               <div className="how-step">
                 <span className="how-num">2</span>

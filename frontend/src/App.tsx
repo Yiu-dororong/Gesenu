@@ -236,7 +236,7 @@ export function App() {
     setEnriching(true);
 
     try {
-      const res = await fetch(`${API_BASE}/api/dict/lookup?lemma=${encodeURIComponent(token.lemma)}`);
+      const res = await fetch(`${API_BASE}/api/dict/lookup?keyword=${encodeURIComponent(token.lemma)}`);
       if (!res.ok) throw new Error('Lookup failed');
       const data: DictLookupResponse = await res.json();
       setDictInfo(data);
