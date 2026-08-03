@@ -1,0 +1,131 @@
+/* Flashcard Study Session */
+.session-container {
+  max-width: 660px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  width: 100%;
+}
+
+.session-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.session-progress {
+  font-size: 0.85rem;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.flashcard-wrapper {
+  perspective: 1000px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.flashcard-glass {
+  position: relative;
+  width: 100%;
+  min-height: 350px;
+  background: var(--ink-card);
+  border: 1px solid var(--border-accent);
+  border-radius: 16px;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease;
+}
+
+.flashcard-glass.flipped {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  padding: 2.2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+}
+
+.card-face.back {
+  transform: rotateY(180deg);
+}
+
+.card-jlpt-tag {
+  align-self: flex-end;
+  background: rgba(199, 154, 68, 0.15);
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.card-main-lemma {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--ivory);
+}
+
+.card-reading {
+  font-size: 1.15rem;
+  color: var(--gold);
+}
+
+.context-quote {
+  background: #0d0b10;
+  border-left: 3px solid var(--gold);
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+.flip-hint {
+  font-size: 0.775rem;
+  color: var(--ivory-dim);
+}
+
+.card-meaning-title {
+  font-size: 0.85rem;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.card-meaning-text {
+  font-size: 1.4rem;
+  line-height: 1.4;
+  color: var(--ivory);
+}
+
+.fsm-action-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+}
+
+.fsm-btn {
+  padding: 0.8rem 0.4rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-size: 0.825rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fsm-btn.forgot { background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.3); color: #f87171; }
+.fsm-btn.hard { background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.3); color: #fbbf24; }
+.fsm-btn.good { background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.3); color: #34d399; }
+.fsm-btn.easy { background: rgba(199, 154, 68, 0.15); border-color: var(--gold); color: var(--gold); }
+
+@media (max-width: 600px) {
+  .fsm-action-buttons { grid-template-columns: repeat(2, 1fr); }
+}

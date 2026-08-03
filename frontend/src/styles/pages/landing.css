@@ -1,0 +1,353 @@
+/* LANDING PAGE — SCROLLYTELLING PRODUCT NARRATIVE DESIGN */
+.landing-wrapper {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--ink);
+}
+
+.landing-bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.landing-scroller {
+  position: relative;
+  z-index: 1;
+  height: 100vh;
+  overflow-y: scroll;
+  scroll-snap-type: y proximity;
+  scroll-behavior: smooth;
+}
+
+.landing-snap-section {
+  min-height: 100vh;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.landing-transparent-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 840px;
+  background: transparent;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ivory-dim);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.scroll-hint:hover {
+  color: var(--gold);
+}
+
+.scroll-hint:hover .chevron {
+  border-color: var(--gold);
+}
+
+.chevron {
+  width: 16px;
+  height: 16px;
+  border-right: 2px solid var(--ivory-dim);
+  border-bottom: 2px solid var(--ivory-dim);
+  transform: rotate(45deg);
+  animation: bob 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron { animation: none; }
+  .landing-scroller { scroll-behavior: auto; }
+}
+
+.hero-kana-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -55%);
+  font-size: clamp(14rem, 25vw, 22rem);
+  color: rgba(242, 233, 218, 0.03);
+  pointer-events: none;
+  user-select: none;
+  font-weight: 700;
+  z-index: 0;
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.hero-eyebrow {
+  font-size: 0.85rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.hero-h1 {
+  font-size: clamp(2.4rem, 4.5vw, 3.6rem);
+  line-height: 1.25;
+  color: var(--ivory);
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.hero-lead {
+  font-size: 1.15rem;
+  color: var(--ivory-dim);
+  line-height: 1.6;
+  margin-bottom: 2.2rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.hero-lead em {
+  color: var(--ivory);
+  font-style: normal;
+  border-bottom: 1px solid var(--gold);
+}
+
+.hero-cta-group {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.hero-btn {
+  padding: 0.85rem 2rem;
+  font-size: 1rem;
+}
+
+/* Sections */
+.landing-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.section-rule {
+  width: 40px;
+  height: 2px;
+  background: var(--gold);
+}
+
+.section-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.section-h2 {
+  font-size: 1.8rem;
+  color: var(--ivory);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+}
+
+/* Problem Grid - Transparent minimalism */
+.problem-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  text-align: left;
+  margin-top: 1.5rem;
+}
+
+.problem-item {
+  background: rgba(21, 18, 27, 0.4);
+  border-left: 2px solid var(--gold);
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-radius: 0 8px 8px 0;
+}
+
+.problem-kanji {
+  font-size: 2.2rem;
+  color: var(--vermilion);
+  line-height: 1;
+  font-weight: 700;
+}
+
+.problem-item h3 {
+  font-size: 1.05rem;
+  color: var(--ivory);
+  margin: 0;
+}
+
+.problem-item p {
+  font-size: 0.875rem;
+  color: var(--ivory-dim);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* Why Grid (Transparent cards with Hanafuda subtle left border) */
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  text-align: left;
+  margin-top: 1.5rem;
+}
+
+.why-card {
+  background: rgba(21, 18, 27, 0.4);
+  padding: 1rem 1rem 1rem 1.25rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-radius: 0 8px 8px 0;
+}
+
+.why-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  border-radius: 2px;
+}
+
+.why-pine::before { background: var(--pine); }
+.why-sakura::before { background: var(--sakura); }
+.why-maple::before { background: var(--maple); }
+.why-wave::before { background: var(--wave); }
+
+.why-kana {
+  font-size: 1.8rem;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.why-card h3 {
+  font-size: 0.95rem;
+  color: var(--ivory);
+  margin: 0;
+}
+
+.why-card p {
+  font-size: 0.825rem;
+  color: var(--ivory-dim);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* How Steps — Strict 3-column single row layout */
+.how-steps-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  text-align: left;
+  margin-top: 1.5rem;
+  width: 100%;
+}
+
+.how-step {
+  background: rgba(21, 18, 27, 0.4);
+  border: 1px solid rgba(242, 233, 218, 0.1);
+  border-radius: 12px;
+  padding: 1.25rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.how-num {
+  font-size: 1.8rem;
+  color: var(--gold);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.how-step h3 {
+  font-size: 1.05rem;
+  color: var(--ivory);
+  margin: 0;
+}
+
+.how-step p {
+  font-size: 0.85rem;
+  color: var(--ivory-dim);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.how-arrow {
+  font-size: 1.5rem;
+  color: var(--gold);
+  align-self: center;
+  opacity: 0.5;
+}
+
+.landing-cta-final {
+  text-align: center;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 1rem;
+}
+
+.cta-kana {
+  font-size: 1.8rem;
+  color: var(--gold);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.cta-sub {
+  font-size: 1rem;
+  color: var(--ivory-dim);
+  margin-bottom: 1.8rem;
+}
+
+@media (max-width: 900px) {
+  .how-arrow { display: none; }
+}
+
+@media (max-width: 768px) {
+  .problem-grid, .why-grid, .how-steps-row {
+    grid-template-columns: 1fr;
+  }
+}

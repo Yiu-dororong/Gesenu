@@ -1,0 +1,29 @@
+:root {
+  /* Hanafuda Color Palette: Black Lacquer, Warm Ivory, & 6 Suit Colors */
+  --ink: #121016;
+  --ink-card: #1a1721;
+  --ink-surface: #17141d;
+  --ivory: #F2E9DA;
+  --ivory-dim: #b8ac9a;
+  --ivory-faint: rgba(242, 233, 218, 0.06);
+
+  --gold: #C79A44;
+  --gold-soft: rgba(199, 154, 68, 0.25);
+  --vermilion: #C1546F;
+
+  /* Suit Colors */
+  --pine: #2E4A3B;
+  --sakura: #C1546F;
+  --moon: #C79A44;
+  --maple: #B0512E;
+  --plum: #A94F63;
+  --wave: #2F6B6B;
+
+  --border-color: rgba(242, 233, 218, 0.12);
+  --border-accent: rgba(199, 154, 68, 0.35);
+
+  --status-new: #3b82f6;
+  --status-learning: #f59e0b;
+  --status-known: #10b981;
+  --status-mastered: #C79A44;
+}

@@ -1,0 +1,76 @@
+/* Grid & Cards inside deck */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  background: rgba(242,233,218,0.03);
+  border: 1px solid var(--border-color);
+  color: var(--ivory-dim);
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.filter-chip.active { background: rgba(199, 154, 68, 0.2); border-color: var(--gold); color: var(--gold); }
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 1.25rem;
+}
+
+.word-card {
+  background: var(--ink-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.85rem;
+}
+
+.jlpt-badge {
+  padding: 0.15rem 0.5rem;
+  background: rgba(199, 154, 68, 0.12);
+  border: 1px solid rgba(199, 154, 68, 0.3);
+  border-radius: 4px;
+  font-size: 0.725rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.badge-status {
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.725rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.status-New { background: rgba(59, 130, 246, 0.12); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+.status-Learning { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+.status-Known { background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+.status-Mastered { background: rgba(199, 154, 68, 0.15); color: var(--gold); border: 1px solid var(--gold); }

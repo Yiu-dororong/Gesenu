@@ -1,0 +1,124 @@
+/* Encounter Page */
+.parse-section {
+  background: var(--ink-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 1.75rem;
+}
+
+.sentence-textarea {
+  width: 100%;
+  min-height: 90px;
+  background: #0d0b10;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  color: var(--ivory);
+  font-size: 1.05rem;
+}
+
+.sentence-textarea:focus { outline: none; border-color: var(--gold); }
+
+.preset-pills {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.preset-btn {
+  background: rgba(242,233,218,0.04);
+  border: 1px solid var(--border-color);
+  color: var(--ivory-dim);
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.775rem;
+  cursor: pointer;
+}
+
+.preset-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+.token-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  background: #0d0b10;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.token-tag {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  background: rgba(242,233,218,0.03);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+}
+
+.token-tag.selectable { background: rgba(199, 154, 68, 0.08); border-color: rgba(199, 154, 68, 0.3); }
+.token-tag.selectable:hover { background: rgba(199, 154, 68, 0.2); border-color: var(--gold); }
+.token-tag.active { background: rgba(199, 154, 68, 0.3); border-color: var(--gold); }
+
+.enrichment-card {
+  background: var(--ink-surface);
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.context-box {
+  background: #0d0b10;
+  border-left: 3px solid var(--gold);
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  margin: 0.8rem 0;
+}
+
+.save-deck-picker-step {
+  margin-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  padding-top: 1rem;
+}
+
+.picker-label {
+  font-size: 0.825rem;
+  color: var(--ivory-dim);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.deck-chips-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip-btn {
+  background: rgba(242, 233, 218, 0.04);
+  border: 1px solid var(--border-color);
+  color: var(--ivory);
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.825rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.chip-btn:hover { border-color: var(--gold); }
+.chip-btn.selected { background: rgba(199, 154, 68, 0.25); border-color: var(--gold); color: var(--gold); }
+
+.chip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
