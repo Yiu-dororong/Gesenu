@@ -15,6 +15,8 @@ import {
   DEFAULT_DECKS,
   SEEDED_DEMO_CARDS,
   DEMO_PARSE_MAP,
+  getSentenceId,
+  interleaveCardsBySentence,
 } from './constants/decks';
 
 import { DemoAPI } from './services/api/DemoAPI';
@@ -98,6 +100,7 @@ export function App() {
 
   // Test Session State
   const [selectedTestDeckIds, setSelectedTestDeckIds] = useState<string[]>([]);
+  const [isStrictTest, setIsStrictTest] = useState<boolean>(false);
   const [testQueue, setTestQueue] = useState<WordCard[]>([]);
   const [testIndex, setTestIndex] = useState<number>(0);
   const [userAnswer, setUserAnswer] = useState<string>('');
@@ -271,7 +274,7 @@ export function App() {
       if (!isMountedRef.current) return;
       notify(
         isDemoMode
-          ? '⚡ Demo Mode: Using in-memory client tokenizer'
+          ? 'Demo Mode: Using pre-split result'
           : 'Backend offline: using fallback client-side tokenizer'
       );
       const fallbackTokens =
@@ -296,23 +299,93 @@ export function App() {
     setEnriching(true);
 
     try {
-      if (isDemoMode || apiClientRef.current?.isDemoMode) {
-        throw new Error('Demo mode client dict');
+      // 1. Direct meaning on token (pre-parsed DEMO_PARSE_MAP tokens)
+      if (token.meaning) {
+        if (isMountedRef.current) {
+          setDictInfo({
+            lemma: token.lemma,
+            reading: token.reading || token.surface,
+            meaning: token.meaning,
+            jlpt_level: token.jlpt_level || null,
+            found: true,
+          });
+        }
+        return;
       }
-      const res = await fetch(`${API_BASE}/api/dict/lookup?keyword=${encodeURIComponent(token.lemma)}`);
-      if (!res.ok) throw new Error('Lookup failed');
-      const data: DictLookupResponse = await res.json();
-      if (!isMountedRef.current) return;
-      setDictInfo(data);
-    } catch {
-      if (!isMountedRef.current) return;
-      setDictInfo({
-        lemma: token.lemma,
-        reading: token.reading || 'よみ',
-        meaning: 'Contextual Japanese vocabulary entry',
-        jlpt_level: 'N2',
-        found: true,
-      });
+
+      // 2. Check existing cards / SEEDED_DEMO_CARDS
+      const existingCard =
+        words.find((w) => w.lemma === token.lemma || w.surface_form === token.surface) ||
+        SEEDED_DEMO_CARDS.find((c) => c.lemma === token.lemma || c.surface_form === token.surface);
+
+      if (existingCard) {
+        if (isMountedRef.current) {
+          setDictInfo({
+            lemma: existingCard.lemma,
+            reading: existingCard.reading || token.reading || '',
+            meaning: existingCard.meaning,
+            jlpt_level: existingCard.jlpt_level || null,
+            found: true,
+          });
+        }
+        return;
+      }
+
+      // 3. Network Lookup (ONLY in Live mode, NOT in Demo mode)
+      if (!isDemoMode && !apiClientRef.current?.isDemoMode) {
+        try {
+          const res = await fetch(`${API_BASE}/api/dict/lookup?keyword=${encodeURIComponent(token.lemma)}`);
+          if (res.ok) {
+            const data: DictLookupResponse = await res.json();
+            if (data.found && data.meaning) {
+              if (isMountedRef.current) setDictInfo(data);
+              return;
+            }
+          }
+        } catch {
+          // Backend service offline
+        }
+
+        try {
+          const jishoRes = await fetch(`https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(token.lemma)}`);
+          if (jishoRes.ok) {
+            const jishoData = await jishoRes.json();
+            if (jishoData.data && jishoData.data.length > 0) {
+              const item = jishoData.data[0];
+              const primaryReading = item.japanese?.[0]?.reading || token.reading || '';
+              const defs = item.senses
+                ?.slice(0, 3)
+                .map((s: { english_definitions?: string[] }) => s.english_definitions?.join('; '))
+                .filter(Boolean)
+                .join(' | ');
+              const jlptTag = item.jlpt?.[0]?.toUpperCase().replace('JLPT-', '') || null;
+              if (isMountedRef.current) {
+                setDictInfo({
+                  lemma: item.japanese?.[0]?.word || token.lemma,
+                  reading: primaryReading,
+                  meaning: defs || `Vocabulary entry for ${token.lemma}`,
+                  jlpt_level: jlptTag,
+                  found: true,
+                });
+              }
+              return;
+            }
+          }
+        } catch {
+          // Jisho API unreachable
+        }
+      }
+
+      // 4. Clean fallback for unmapped words in offline mode
+      if (isMountedRef.current) {
+        setDictInfo({
+          lemma: token.lemma,
+          reading: token.reading || token.surface,
+          meaning: `Japanese vocabulary item (${token.pos || 'Word'})`,
+          jlpt_level: null,
+          found: true,
+        });
+      }
     } finally {
       if (isMountedRef.current) {
         setEnriching(false);
@@ -344,17 +417,27 @@ export function App() {
       }
     }
 
+    const contextSent = parseResult?.sentence || sentenceInput;
     const newCard: WordCard = {
       lemma: dictInfo?.lemma || selectedToken.lemma,
+      surface_form: selectedToken.surface || dictInfo?.lemma || selectedToken.lemma,
+      span_start: selectedToken.span_start,
+      span_end: selectedToken.span_end,
+      sentence_id: getSentenceId(contextSent),
       reading: dictInfo?.reading || selectedToken.reading || '',
       meaning: dictInfo?.meaning || 'Saved vocabulary card',
       jlpt_level: dictInfo?.jlpt_level || 'N3',
-      context_sentence: parseResult?.sentence || sentenceInput,
+      context_sentence: contextSent,
       status: 'New',
     };
 
     setWords((prev) => [newCard, ...prev.filter((w) => w.lemma !== newCard.lemma)]);
     setCardDeckMapping((prev) => ({ ...prev, [newCard.lemma]: targetDeckId }));
+
+    // Sync to in-memory DemoAPI if in demo mode
+    if (apiClientRef.current && 'addCard' in apiClientRef.current) {
+      (apiClientRef.current as { addCard: (c: WordCard, d: string) => void }).addCard(newCard, targetDeckId);
+    }
 
     // Persist to backend /api/test-words API only when not in demo mode
     if (!isDemoMode && !apiClientRef.current?.isDemoMode) {
@@ -465,17 +548,47 @@ export function App() {
   };
 
   const launchTestSession = () => {
-    const pool = words.filter((w) => {
-      const dId = cardDeckMapping[w.lemma] || 'matsu';
+    let pool = words.filter((w) => {
+      const dId = cardDeckMapping[w.lemma] || 'unclassified';
       return selectedTestDeckIds.includes(dId);
     });
+
+    console.log('[Test] Selected deck IDs:', selectedTestDeckIds);
+    console.log('[Test] cardDeckMapping:', cardDeckMapping);
+    console.log('[Test] Deck-filtered pool:', pool.map(c => ({ lemma: c.lemma, deck: cardDeckMapping[c.lemma], context_sentence: c.context_sentence?.slice(0, 20) })));
 
     if (pool.length === 0) {
       notify('No cards available in selected decks for testing.');
       return;
     }
 
-    setTestQueue(pool);
+    if (isStrictTest) {
+      // Group cards in selected decks by their sentence
+      const sentenceGroups = new Map<string, WordCard[]>();
+      for (const card of pool) {
+        const sId = getSentenceId(card.context_sentence || card.sentence_id || '');
+        if (!sentenceGroups.has(sId)) {
+          sentenceGroups.set(sId, []);
+        }
+        sentenceGroups.get(sId)!.push(card);
+      }
+
+      console.log('[Test] Sentence groups:', [...sentenceGroups.entries()].map(([k, v]) => ({ sId: k, cards: v.map(c => c.lemma), sentence: v[0]?.context_sentence?.slice(0, 30) })));
+
+      // Randomly pick 1 card/question per sentence
+      const strictPool: WordCard[] = [];
+      sentenceGroups.forEach((cardsInSentence) => {
+        const randomIndex = Math.floor(Math.random() * cardsInSentence.length);
+        strictPool.push(cardsInSentence[randomIndex]);
+      });
+
+      pool = strictPool;
+      console.log('[Test] Strict pool (1 per sentence):', pool.map(c => ({ lemma: c.lemma, sentence: c.context_sentence?.slice(0, 30) })));
+    }
+
+    const interleavedPool = interleaveCardsBySentence(pool);
+
+    setTestQueue(interleavedPool);
     setTestIndex(0);
     setUserAnswer('');
     setTestFeedback('idle');
@@ -488,9 +601,15 @@ export function App() {
     if (!currentCard) return;
 
     const cleanInput = userAnswer.trim().toLowerCase();
-    const isCorrect =
+    const isExactSurfaceMatch =
+      Boolean(currentCard.surface_form) &&
+      cleanInput === currentCard.surface_form!.toLowerCase();
+
+    const isLemmaMatch =
       cleanInput === currentCard.lemma.toLowerCase() ||
       cleanInput === currentCard.reading.toLowerCase();
+
+    const isCorrect = isExactSurfaceMatch || isLemmaMatch;
 
     if (isCorrect) {
       setTestFeedback('correct');
@@ -658,6 +777,8 @@ export function App() {
           selectedTestDeckIds={selectedTestDeckIds}
           setSelectedTestDeckIds={setSelectedTestDeckIds}
           deckStats={deckStats}
+          isStrictTest={isStrictTest}
+          setIsStrictTest={setIsStrictTest}
           onNavigate={setCurrentPage}
           onLaunchTestSession={launchTestSession}
         />

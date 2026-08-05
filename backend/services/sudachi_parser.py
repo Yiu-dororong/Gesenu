@@ -120,6 +120,8 @@ def parse_sentence(sentence: str) -> list[dict[str, Any]]:
             "reading": reading_hira or surface,
             "pos": pos_primary,
             "pos_detail": f"{pos_primary}-{pos_secondary}",
+            "span_start": token.begin(),
+            "span_end": token.end(),
             "is_selectable": is_selectable,
         })
 

@@ -21,18 +21,22 @@ export function StudySetupModal({
   onLaunchSession,
 }: StudySetupModalProps) {
   const [targetDeckId, setTargetDeckId] = useState<string>(initialDeckId || 'all');
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>(['New', 'Learning']);
-
-  useEffect(() => {
-    if (show) {
-      setTargetDeckId(initialDeckId || 'all');
-    }
-  }, [show, initialDeckId]);
+  type StatusPresetMode = 'due' | 'new' | 'learning' | 'all' | 'custom';
+  const [statusMode, setStatusMode] = useState<StatusPresetMode>('due');
+  const [customStatuses, setCustomStatuses] = useState<string[]>(['New', 'Learning']);
 
   const ALL_STATUSES = ['New', 'Learning', 'Known', 'Mastered'];
 
-  const toggleStatus = (st: string) => {
-    setSelectedStatuses((prev) =>
+  const activeStatuses = useMemo(() => {
+    if (statusMode === 'due') return ['New', 'Learning'];
+    if (statusMode === 'all') return ['New', 'Learning', 'Known', 'Mastered'];
+    if (statusMode === 'new') return ['New'];
+    if (statusMode === 'learning') return ['Learning'];
+    return customStatuses;
+  }, [statusMode, customStatuses]);
+
+  const toggleCustomStatus = (st: string) => {
+    setCustomStatuses((prev) =>
       prev.includes(st) ? prev.filter((s) => s !== st) : [...prev, st]
     );
   };
@@ -41,10 +45,10 @@ export function StudySetupModal({
     return words.filter((w) => {
       const dId = cardDeckMapping[w.lemma] || 'unclassified';
       const matchesDeck = targetDeckId === 'all' || dId === targetDeckId;
-      const matchesStatus = selectedStatuses.includes(w.status);
+      const matchesStatus = activeStatuses.includes(w.status);
       return matchesDeck && matchesStatus;
     });
-  }, [words, cardDeckMapping, targetDeckId, selectedStatuses]);
+  }, [words, cardDeckMapping, targetDeckId, activeStatuses]);
 
   if (!show) return null;
 
@@ -94,50 +98,62 @@ export function StudySetupModal({
           <div className="preset-pills" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.75rem' }}>
             <button
               type="button"
-              className="preset-btn"
-              onClick={() => setSelectedStatuses(['New', 'Learning'])}
+              className={`preset-btn ${statusMode === 'due' ? 'selected' : ''}`}
+              onClick={() => setStatusMode('due')}
             >
               ⚡ Due Only (New + Learning)
             </button>
             <button
               type="button"
-              className="preset-btn"
-              onClick={() => setSelectedStatuses(['New', 'Learning', 'Known', 'Mastered'])}
-            >
-              🌟 All Statuses
-            </button>
-            <button
-              type="button"
-              className="preset-btn"
-              onClick={() => setSelectedStatuses(['New'])}
+              className={`preset-btn ${statusMode === 'new' ? 'selected' : ''}`}
+              onClick={() => setStatusMode('new')}
             >
               🌱 New Only
             </button>
             <button
               type="button"
-              className="preset-btn"
-              onClick={() => setSelectedStatuses(['Learning'])}
+              className={`preset-btn ${statusMode === 'learning' ? 'selected' : ''}`}
+              onClick={() => setStatusMode('learning')}
             >
               🔥 Learning Only
             </button>
+            <button
+              type="button"
+              className={`preset-btn ${statusMode === 'all' ? 'selected' : ''}`}
+              onClick={() => setStatusMode('all')}
+            >
+              🌟 All Statuses
+            </button>
+            <button
+              type="button"
+              className={`preset-btn ${statusMode === 'custom' ? 'selected' : ''}`}
+              onClick={() => setStatusMode('custom')}
+            >
+              ⚙️ Custom
+            </button>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {ALL_STATUSES.map((st) => {
-              const checked = selectedStatuses.includes(st);
-              return (
-                <button
-                  type="button"
-                  key={st}
-                  className={`chip-btn ${checked ? 'selected' : ''}`}
-                  onClick={() => toggleStatus(st)}
-                  style={{ textTransform: 'capitalize' }}
-                >
-                  {checked ? '✓ ' : '+ '}{st}
-                </button>
-              );
-            })}
-          </div>
+          {statusMode === 'custom' && (
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', padding: '0.75rem', background: 'rgba(255, 255, 255, 0.04)', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--gold)', width: '100%', marginBottom: '0.25rem' }}>
+                Select specific statuses to include:
+              </span>
+              {ALL_STATUSES.map((st) => {
+                const checked = customStatuses.includes(st);
+                return (
+                  <button
+                    type="button"
+                    key={st}
+                    className={`chip-btn ${checked ? 'selected' : ''}`}
+                    onClick={() => toggleCustomStatus(st)}
+                    style={{ textTransform: 'capitalize' }}
+                  >
+                    {checked ? '✓ ' : '+ '}{st}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Action Button */}

@@ -10,67 +10,26 @@ export class DemoAPI implements GesenuAPI {
   private cards: WordCard[] = [...SEEDED_DEMO_CARDS];
 
   private cardDeckMap: Record<string, string> = {
-    // Theme 1: Work / Business / Projects
+    // Theme 1: Work (Sentence 3: 曖昧だったコンセプト...)
     見据える: 'work',
-    社会現象: 'work',
     現象: 'work',
     じわじわ: 'work',
     コンセプト: 'work',
     曖昧: 'work',
-    複雑: 'work',
-    着々: 'work',
-    取り組む: 'work',
-    プロジェクト: 'work',
-    現場: 'work',
-    課題解決: 'work',
-    解決: 'work',
-    直接: 'work',
-    目指す: 'work',
 
-    // Theme 2: Life / Daily Fatigue / Inner Emotion
-    草臥れる: 'life',
-    買い物: 'life',
-    買い物する: 'life',
-    うろうろ: 'life',
-    コンビニ: 'life',
-    面倒臭い: 'life',
-    料理: 'life',
-    作る: 'life',
-    様子: 'life',
-    街: 'life',
-    後: 'life',
-    昔: 'life',
-    思い出: 'life',
-    振り返る: 'life',
-    泣く: 'life',
-    切ない: 'life',
-    気持ち: 'life',
-    反面: 'life',
-    心: 'life',
-    ドキドキ: 'life',
-    感じる: 'life',
-    メンタル: 'life',
-    保つ: 'life',
+    // Theme 2: Life (Sentence 2: 最近ハマっているアイドル...)
+    ハマる: 'life',
+    かわいい: 'life',
+    推し: 'life',
+    キラキラ: 'life',
+    アイドル: 'life',
 
-    // Theme 3: Leisure / Outings / Pop Culture
+    // Theme 3: Leisure (Sentence 1: 天気予報を確認して...)
     天気予報: 'leisure',
-    天気: 'leisure',
     散歩: 'leisure',
-    散歩する: 'leisure',
-    ぶらぶら: 'leisure',
     カフェ: 'leisure',
-    周り: 'leisure',
-    歩く: 'leisure',
-    過ごす: 'leisure',
+    ぶらぶら: 'leisure',
     良い: 'leisure',
-    最近: 'leisure',
-    ハマる: 'leisure',
-    仕草: 'leisure',
-    かわいい: 'leisure',
-    推し: 'leisure',
-    キラキラ: 'leisure',
-    輝く: 'leisure',
-    アイドル: 'leisure',
   };
 
   public getInitialCardDeckMapping(): Record<string, string> {
@@ -88,22 +47,18 @@ export class DemoAPI implements GesenuAPI {
     return this.cards.filter((c) => this.cardDeckMap[c.lemma] === deckId);
   }
 
+  public addCard(card: WordCard, deckId: string): void {
+    const idx = this.cards.findIndex((c) => c.lemma === card.lemma);
+    if (idx !== -1) {
+      this.cards[idx] = { ...this.cards[idx], ...card };
+    } else {
+      this.cards.push(card);
+    }
+    this.cardDeckMap[card.lemma] = deckId;
+  }
+
   async submitReview(wordId: string, feedback: ReviewFeedback): Promise<ReviewResult> {
     await this.delay(350);
-
-    const targetIndex = this.cards.findIndex((c) => c.lemma === wordId);
-    if (targetIndex === -1) {
-      throw new Error(`Word "${wordId}" not found in demo session.`);
-    }
-
-    const currentCard = this.cards[targetIndex];
-    const prevStatus = currentCard.status;
-
-    // SCRIPTED FAILURE DEMO: Intentionally reject review on "社会現象" for the first attempt
-    if ((wordId === '社会現象' || wordId === '分解') && !this.hasSimulatedFailureFired) {
-      this.hasSimulatedFailureFired = true;
-      return Promise.reject(new Error('Network drop (Demo script: Testing optimistic UI rollback)'));
-    }
 
     const statusMap: Record<ReviewFeedback, string> = {
       forgot: 'New',
@@ -113,8 +68,32 @@ export class DemoAPI implements GesenuAPI {
     };
     const nextStatus = statusMap[feedback];
 
-    // Mutate in-memory card array
-    this.cards[targetIndex] = { ...currentCard, status: nextStatus };
+    const targetIndex = this.cards.findIndex((c) => c.lemma === wordId);
+    let prevStatus = 'New';
+
+    if (targetIndex !== -1) {
+      const currentCard = this.cards[targetIndex];
+      prevStatus = currentCard.status;
+
+      // SCRIPTED FAILURE DEMO: Intentionally reject review on "社会現象" for the first attempt
+      if ((wordId === '社会現象' || wordId === '分解') && !this.hasSimulatedFailureFired) {
+        this.hasSimulatedFailureFired = true;
+        return Promise.reject(new Error('Network drop (Demo script: Testing optimistic UI rollback)'));
+      }
+
+      // Mutate in-memory card array
+      this.cards[targetIndex] = { ...currentCard, status: nextStatus };
+    } else {
+      // Graceful fallback for dynamic / encounter-saved cards not in seeded set
+      this.cards.push({
+        lemma: wordId,
+        surface_form: wordId,
+        reading: wordId,
+        meaning: 'User saved vocabulary card',
+        context_sentence: '',
+        status: nextStatus,
+      });
+    }
 
     return {
       success: true,

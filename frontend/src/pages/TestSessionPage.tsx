@@ -1,4 +1,5 @@
 import type { WordCard, NavigationPage } from '../types/app';
+import { maskContextSentence } from '../constants/decks';
 
 interface TestSessionPageProps {
   testQueue: WordCard[];
@@ -24,6 +25,9 @@ export function TestSessionPage({
   onNextQuestion,
 }: TestSessionPageProps) {
   const currentCard = testQueue[testIndex];
+  const { maskedText, surface } = currentCard
+    ? maskContextSentence(currentCard)
+    : { maskedText: '', surface: '' };
 
   return (
     <main className="session-container">
@@ -41,7 +45,7 @@ export function TestSessionPage({
           <span className="test-hint-badge">Masked Context Sentence</span>
 
           <div className="masked-sentence jp-font">
-            "{currentCard.context_sentence.replace(currentCard.lemma, '【 ＿？＿ 】')}"
+            "{maskedText}"
           </div>
 
           <div className="test-definition-box">
@@ -54,7 +58,7 @@ export function TestSessionPage({
                 type="text"
                 className="sentence-textarea jp-font"
                 style={{ minHeight: '54px' }}
-                placeholder="Type missing word (Kanji or Reading)..."
+                placeholder="Type missing word (Surface form or Lemma)..."
                 value={userAnswer}
                 onChange={(e) => setUserAnswer(e.target.value)}
                 onKeyDown={(e) => {
@@ -71,14 +75,20 @@ export function TestSessionPage({
                 <div>
                   <h4>Correct! Excellent Recall.</h4>
                   <p>
-                    Answer: <strong>{currentCard.lemma}</strong> ({currentCard.reading})
+                    Surface form in sentence: <strong>{surface}</strong>
+                  </p>
+                  <p style={{ fontSize: '0.88rem', opacity: 0.85, marginTop: '0.2rem' }}>
+                    Dictionary Lemma: <strong>{currentCard.lemma}</strong> ({currentCard.reading})
                   </p>
                 </div>
               ) : (
                 <div>
                   <h4>Not quite.</h4>
                   <p>
-                    Correct Lemma: <strong>{currentCard.lemma}</strong> ({currentCard.reading})
+                    Surface form in sentence: <strong>{surface}</strong>
+                  </p>
+                  <p style={{ fontSize: '0.88rem', opacity: 0.85, marginTop: '0.2rem' }}>
+                    Dictionary Lemma: <strong>{currentCard.lemma}</strong> ({currentCard.reading})
                   </p>
                 </div>
               )}

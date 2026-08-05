@@ -57,7 +57,7 @@ export function DeckGridPage({
     <main className="container">
       <div className="deck-nav-bar">
         <button className="back-btn" onClick={() => onNavigate('study_arc')}>
-          ‹ Back to Arc
+          ‹ Back to Decks
         </button>
 
         <div className="deck-title-badge">

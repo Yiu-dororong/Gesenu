@@ -90,6 +90,8 @@ class TokenItem(BaseModel):
     reading: str = Field(..., example="はしる")
     pos: str = Field(..., example="動詞")
     pos_detail: str = Field(..., example="動詞-一般")
+    span_start: int | None = Field(None, example=0)
+    span_end: int | None = Field(None, example=3)
     is_selectable: bool = Field(..., example=True)
 
 
@@ -115,6 +117,10 @@ class DictLookupResponse(BaseModel):
 class WordCard(BaseModel):
     id: str | None = Field(None, example="123e4567-e89b-12d3-a456-426614174000")
     lemma: str = Field(..., example="解せる")
+    surface_form: str | None = Field(None, example="解せる")
+    span_start: int | None = Field(None, example=17)
+    span_end: int | None = Field(None, example=20)
+    sentence_id: str | None = Field(None, example="sent-1")
     reading: str = Field(..., example="かいせる")
     meaning: str = Field(..., example="to make sense of; comprehend")
     jlpt_level: str | None = Field(None, example="N1")
