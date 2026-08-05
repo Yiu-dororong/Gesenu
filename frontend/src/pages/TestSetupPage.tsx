@@ -63,6 +63,7 @@ export function TestSetupPage({
             className="btn-primary"
             onClick={onLaunchTestSession}
             disabled={selectedTestDeckIds.length === 0}
+            style={{ width: '100%' , height: '40px', fontSize: '1rem', fontWeight: 600, letterSpacing: '0.5px' }}
           >
             Start Masked Recall Session ({selectedTestDeckIds.length} Decks Selected)
           </button>

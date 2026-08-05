@@ -27,6 +27,16 @@ header.deck-header h1 {
   font-size: clamp(24px, 4vw, 34px);
 }
 
+header.deck-header .sub kbd {
+  background: #0d0b10;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  font-family: monospace;
+  font-size: 0.725rem;
+  color: var(--gold);
+}
+
 .arc-wrap {
   position: relative;
   flex: 1;

@@ -1,15 +1,30 @@
-# Gesenu (解せぬを、解せるへ。)
-### From "I don't get it" to "I get it" — A Context-First Japanese Vocabulary Learning System
+# Gesenu 
+
+**Learn words where you found them.** 
 
 > 🚧 **Status: In active development.** Core pipeline is functional; study loop and auth are in progress.
 
 ---
 
-Have you ever hit a Japanese sentence and thought *"I don't get this"* (**解せぬ**)? **Gesenu** turns those moments into vocabulary that sticks — by capturing the word *in the sentence you found it*, not in an abstract list.
+Language learning happens everywhere, books, anime, news, games, and more. We believe every unfamiliar word belongs with the context where you found it, not as an isolated dictionary entry. Gesenu captures both the word and its original context, helping you build understanding instead of simply memorizing definitions.
+
+*解せぬを、解せるへ*
+
+---
+
+## 🚨 The Problem: Scattered Knowledge
+
+Japanese learning often leaves learners struggling with fragmented, fragile vocabulary:
+
+- **Vocabulary is fragmented** — Words encountered across books, anime, news, and social media are difficult to organize without losing the context in which they appeared.
+- **Generic lists waste effort** — Studying pre-made vocabulary decks is inefficient because they inevitably mix words you already know with words you don't.
+- **Meaning alone is not enough** — Memorizing dictionary definitions in isolation leaves words fragile; without original sentence context and particle usage, words evaporate quickly within days and remain hard to apply in real reading.
 
 ---
 
 ## 🚀 Key Features
+
+Gesenu follows a simple learning loop: encounter → study → test. Capture vocabulary from real Japanese, organize it into context-bound cards, then reinforce it through sentence-based active recall.
 
 - **Sentence-Driven Capture** — Paste any Japanese sentence. SudachiPy tokenizes and normalises inflected forms back to dictionary lemmas (走った → 走る), filtering by POS so you only save meaningful vocabulary.
 - **Context-Bound Cards** — Jisho API enriches each word with meaning, reading, and JLPT level. Every card stays bound to the original sentence, so context disambiguates meaning.
@@ -51,12 +66,8 @@ Have you ever hit a Japanese sentence and thought *"I don't get this"* (**解せ
 
 ---
 
-## 💡 Core Philosophy: Context Over Isolation
+## 🎯 Who is Gesenu for?
 
-Traditional vocab study matches isolated words to definitions — leading to fragile memory that doesn't hold in real reading. Gesenu enforces **Context-First Learning**:
+Gesenu is designed primarily for **intermediate and advanced Japanese learners** who regularly encounter vocabulary through authentic content such as books, anime, games, news, and online discussions.
 
-1. You only save words you've *actually encountered* in real Japanese media.
-2. Every card is bound to its original sentence.
-3. Recall tests ask you to fill in the blank inside that sentence.
-
-Vocabulary learned in syntactic context carries grammar patterns, collocations, and particle use — moving you from *解せぬ* to *解せる* far faster.
+If you're just beginning Japanese, traditional vocabulary lists and beginner textbooks are often a more effective way to build a core vocabulary. Once you start learning from real-world content, Gesenu helps turn those encounters into context-bound vocabulary that is easier to retain and revisit.

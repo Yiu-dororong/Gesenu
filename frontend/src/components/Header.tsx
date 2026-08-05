@@ -3,6 +3,7 @@ import type { NavigationPage } from '../types/app';
 interface HeaderProps {
   userEmail: string;
   currentPage: NavigationPage;
+  isDemoMode?: boolean;
   onNavigate: (page: NavigationPage) => void;
   onOpenTestSetup: () => void;
   onLogout: () => void;
@@ -11,6 +12,7 @@ interface HeaderProps {
 export function Header({
   userEmail,
   currentPage,
+  isDemoMode,
   onNavigate,
   onOpenTestSetup,
   onLogout,
@@ -20,6 +22,22 @@ export function Header({
       <div className="header-brand" onClick={() => onNavigate('overview')}>
         <span className="brand-logo jp-font">解</span>
         <span className="brand-title">Gesenu</span>
+        {isDemoMode && (
+          <span
+            style={{
+              fontSize: '0.7rem',
+              padding: '0.2rem 0.5rem',
+              borderRadius: '999px',
+              background: 'var(--plum)',
+              color: 'var(--ivory)',
+              fontWeight: 600,
+              marginLeft: '0.5rem',
+              letterSpacing: '0.05em',
+            }}
+          >
+            ⚡ DEMO
+          </span>
+        )}
       </div>
 
       <nav className="header-nav">

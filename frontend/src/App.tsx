@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, type FormEvent } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef, type FormEvent } from 'react';
 import type {
   TokenItem,
   ParseSentenceResponse,
@@ -14,12 +14,17 @@ import {
   SAMPLE_SENTENCES,
   DEFAULT_DECKS,
   SEEDED_DEMO_CARDS,
+  DEMO_PARSE_MAP,
 } from './constants/decks';
+
+import { DemoAPI } from './services/api/DemoAPI';
+import type { ReviewFeedback } from './services/api/types';
 
 import { Toast } from './components/Toast';
 import { Header } from './components/Header';
 import { AuthModal } from './components/AuthModal';
 import { CreateDeckModal } from './components/CreateDeckModal';
+import { StudySetupModal } from './components/StudySetupModal';
 
 import { LandingPage } from './pages/LandingPage';
 import { OverviewPage } from './pages/OverviewPage';
@@ -31,11 +36,28 @@ import { TestSetupPage } from './pages/TestSetupPage';
 import { TestSessionPage } from './pages/TestSessionPage';
 
 export function App() {
+  const notificationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isMountedRef = useRef<boolean>(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (notificationTimerRef.current) {
+        clearTimeout(notificationTimerRef.current);
+      }
+    };
+  }, []);
+
   // Auth State
   const [userMode, setUserMode] = useState<UserMode>('logged_out');
   const [userEmail, setUserEmail] = useState<string>('');
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [authEmailInput, setAuthEmailInput] = useState<string>('');
+
+  // Demo Mode State & API Client
+  const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
+  const apiClientRef = useRef<DemoAPI | null>(null);
 
   // Routing State
   const [currentPage, setCurrentPage] = useState<NavigationPage>('landing');
@@ -43,15 +65,10 @@ export function App() {
   // Decks & Cards Collection State
   const [decks, setDecks] = useState<DeckItem[]>(DEFAULT_DECKS);
   const [words, setWords] = useState<WordCard[]>(SEEDED_DEMO_CARDS);
-  const [cardDeckMapping, setCardDeckMapping] = useState<Record<string, string>>({
-      解せる: 'matsu',
-      解せぬ: 'sakura',
-      分解: 'matsu',
-      記憶: 'tsuki',
-    });
+  const [cardDeckMapping, setCardDeckMapping] = useState<Record<string, string>>({});
 
   // Selected Deck View State
-  const [selectedDeckId, setSelectedDeckId] = useState<string>('matsu');
+  const [selectedDeckId, setSelectedDeckId] = useState<string>('work');
   const [deckFilterStatus, setDeckFilterStatus] = useState<string>('all');
 
   // New Deck Creation State
@@ -76,6 +93,8 @@ export function App() {
   const [studyQueue, setStudyQueue] = useState<WordCard[]>([]);
   const [studyIndex, setStudyIndex] = useState<number>(0);
   const [isFlipped, setIsFlipped] = useState<boolean>(false);
+  const [showStudySetupModal, setShowStudySetupModal] = useState<boolean>(false);
+  const [studySetupDeckId, setStudySetupDeckId] = useState<string>('all');
 
   // Test Session State
   const [selectedTestDeckIds, setSelectedTestDeckIds] = useState<string[]>([]);
@@ -132,17 +151,26 @@ export function App() {
   }, [words, decks, cardDeckMapping]);
 
   // Notifications
-  const notify = (msg: string) => {
+  const notify = useCallback((msg: string) => {
+    if (notificationTimerRef.current) {
+      clearTimeout(notificationTimerRef.current);
+    }
     setNotification(msg);
-    setTimeout(() => setNotification(null), 3000);
-  };
+    notificationTimerRef.current = setTimeout(() => {
+      if (isMountedRef.current) {
+        setNotification(null);
+      }
+    }, 3000);
+  }, []);
 
   // Fetch Test Words from Backend API (/api/test-words)
   const fetchTestWords = async () => {
+    if (isDemoMode || apiClientRef.current?.isDemoMode) return;
     try {
       const res = await fetch(`${API_BASE}/api/test-words`);
       if (!res.ok) throw new Error('API request failed');
       const data = await res.json();
+      if (!isMountedRef.current) return;
       if (data.words && data.words.length > 0) {
         setWords((prev) => {
           const fetchedLemmas = new Set(data.words.map((w: WordCard) => w.lemma));
@@ -164,18 +192,36 @@ export function App() {
     }
   };
 
+  const handleStartDemoSession = async () => {
+    const demo = new DemoAPI();
+    apiClientRef.current = demo;
+    setIsDemoMode(true);
+    setUserMode('guest');
+    setUserEmail('demo@gesenu.browser');
+
+    const demoDecks = await demo.getDecks();
+    const demoWords = await demo.getWords();
+    setDecks(demoDecks);
+    setWords(demoWords);
+    setCardDeckMapping(demo.getInitialCardDeckMapping());
+
+    setCurrentPage('overview');
+    notify('Browser Demo Mode (In-Memory)');
+  };
+
   useEffect(() => {
-    fetchTestWords();
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('demo') === 'true' || urlParams.get('demo') === '1') {
+      void handleStartDemoSession();
+    } else {
+      void fetchTestWords();
+    }
   }, []);
 
   // Auth Handlers
   const handleLoginGuest = () => {
-    setUserMode('guest');
-    setUserEmail('guest@gesenu.demo');
     setShowAuthModal(false);
-    setCurrentPage('overview');
-    fetchTestWords();
-    notify('Logged in as Guest user');
+    handleStartDemoSession();
   };
 
   const handleLoginStandard = (e: FormEvent) => {
@@ -192,6 +238,8 @@ export function App() {
   const handleLogout = () => {
     setUserMode('logged_out');
     setUserEmail('');
+    setIsDemoMode(false);
+    apiClientRef.current = null;
     setCurrentPage('landing');
     notify('Logged out successfully');
   };
@@ -206,6 +254,9 @@ export function App() {
     setDictInfo(null);
 
     try {
+      if (isDemoMode || apiClientRef.current?.isDemoMode) {
+        throw new Error('Demo mode client parser');
+      }
       const res = await fetch(`${API_BASE}/api/parse`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -213,21 +264,30 @@ export function App() {
       });
       if (!res.ok) throw new Error('Parsing service unavailable');
       const data: ParseSentenceResponse = await res.json();
+      if (!isMountedRef.current) return;
       setParseResult(data);
       notify(`Parsed ${data.candidate_count} candidate tokens with SudachiPy`);
     } catch {
-      notify('Backend offline: using fallback client-side tokenizer');
+      if (!isMountedRef.current) return;
+      notify(
+        isDemoMode
+          ? '⚡ Demo Mode: Using in-memory client tokenizer'
+          : 'Backend offline: using fallback client-side tokenizer'
+      );
+      const fallbackTokens =
+        DEMO_PARSE_MAP[targetText] ||
+        DEMO_PARSE_MAP[SAMPLE_SENTENCES[0]] ||
+        DEMO_PARSE_MAP[Object.keys(DEMO_PARSE_MAP)[0]];
+
       setParseResult({
         sentence: targetText,
-        candidate_count: 3,
-        tokens: [
-          { surface: '解せる', lemma: '解せる', reading: 'かいせる', pos: 'Verb', pos_detail: '一般', is_selectable: true },
-          { surface: '分解', lemma: '分解', reading: 'ぶんかい', pos: 'Noun', pos_detail: 'サ変接続', is_selectable: true },
-          { surface: '記憶', lemma: '記憶', reading: 'きおく', pos: 'Noun', pos_detail: 'サ変接続', is_selectable: true },
-        ],
+        candidate_count: fallbackTokens.filter((t) => t.is_selectable).length,
+        tokens: fallbackTokens,
       });
     } finally {
-      setParsing(false);
+      if (isMountedRef.current) {
+        setParsing(false);
+      }
     }
   };
 
@@ -236,11 +296,16 @@ export function App() {
     setEnriching(true);
 
     try {
+      if (isDemoMode || apiClientRef.current?.isDemoMode) {
+        throw new Error('Demo mode client dict');
+      }
       const res = await fetch(`${API_BASE}/api/dict/lookup?keyword=${encodeURIComponent(token.lemma)}`);
       if (!res.ok) throw new Error('Lookup failed');
       const data: DictLookupResponse = await res.json();
+      if (!isMountedRef.current) return;
       setDictInfo(data);
     } catch {
+      if (!isMountedRef.current) return;
       setDictInfo({
         lemma: token.lemma,
         reading: token.reading || 'よみ',
@@ -249,7 +314,9 @@ export function App() {
         found: true,
       });
     } finally {
-      setEnriching(false);
+      if (isMountedRef.current) {
+        setEnriching(false);
+      }
     }
   };
 
@@ -289,14 +356,16 @@ export function App() {
     setWords((prev) => [newCard, ...prev.filter((w) => w.lemma !== newCard.lemma)]);
     setCardDeckMapping((prev) => ({ ...prev, [newCard.lemma]: targetDeckId }));
 
-    // Persist to backend /api/test-words API
-    fetch(`${API_BASE}/api/test-words`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newCard),
-    }).catch(() => {
-      // Local state fallback already updated
-    });
+    // Persist to backend /api/test-words API only when not in demo mode
+    if (!isDemoMode && !apiClientRef.current?.isDemoMode) {
+      fetch(`${API_BASE}/api/test-words`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newCard),
+      }).catch(() => {
+        // Local state fallback already updated
+      });
+    }
 
     const targetDeckName =
       targetDeckId === 'unclassified'
@@ -318,8 +387,6 @@ export function App() {
       jp: newDeckJp,
       en: newDeckEn,
       color: newDeckColor,
-      stubCount: 0,
-      stubDue: 0,
       motifSvg: (
         <svg className="motif" viewBox="0 0 40 40" fill="none">
           <circle cx="20" cy="20" r="14" fill="#F2E9DA" opacity="0.8" />
@@ -334,35 +401,61 @@ export function App() {
     notify(`Created new Hanafuda deck: ${newDeck.jp} (${newDeck.en})`);
   };
 
-  // Study Session Handler
-  const startStudySession = (deckId: string) => {
-    const queue = words.filter((w) => {
-      const dId = cardDeckMapping[w.lemma] || 'matsu';
-      return dId === deckId || deckId === 'unclassified';
-    });
+  // Study Session Handlers (Modal Trigger & Queue Launcher)
+  const startStudySession = (deckId?: string) => {
+    setStudySetupDeckId(deckId || 'all');
+    setShowStudySetupModal(true);
+  };
 
+  const handleLaunchStudySession = (queue: WordCard[]) => {
     if (queue.length === 0) {
-      notify('No cards in this deck yet! Use Encounter to add some.');
+      notify('No cards match the selected filter.');
       return;
     }
-
     setStudyQueue(queue);
     setStudyIndex(0);
     setIsFlipped(false);
     setCurrentPage('study_session');
   };
 
-  // FSM State Transition Handler (Optimistic UI)
-  const advanceFSM = (lemma: string, targetStatus?: string) => {
-    setWords((prev) =>
-      prev.map((w) => {
-        if (w.lemma === lemma) {
-          const next = targetStatus || NEXT_STATUS[w.status] || 'New';
-          return { ...w, status: next };
-        }
-        return w;
-      })
-    );
+  // FSM State Transition Handler (Optimistic UI & Rollback)
+  const advanceFSM = async (lemma: string, targetStatus?: string, feedback?: ReviewFeedback) => {
+    // Capture oldStatus inside the functional updater to avoid stale closure
+    let capturedOldStatus = '';
+    let capturedNextStatus = '';
+
+    setWords((prev) => {
+      const word = prev.find((w) => w.lemma === lemma);
+      if (!word) return prev;
+      capturedOldStatus = word.status;
+      capturedNextStatus = targetStatus || NEXT_STATUS[capturedOldStatus] || 'New';
+      // 1. Optimistic UI update immediately
+      return prev.map((w) => (w.lemma === lemma ? { ...w, status: capturedNextStatus } : w));
+    });
+
+    // 2. Submit review if API client is attached (Demo or backend)
+    if (apiClientRef.current) {
+      try {
+        const fb: ReviewFeedback =
+          feedback ||
+          (capturedNextStatus === 'New'
+            ? 'forgot'
+            : capturedNextStatus === 'Learning'
+            ? 'hard'
+            : capturedNextStatus === 'Known'
+            ? 'good'
+            : 'easy');
+
+        await apiClientRef.current.submitReview(lemma, fb);
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : 'Review sync failed';
+        // 3. Rollback optimistic update on failure using captured pre-update status
+        setWords((prev) =>
+          prev.map((w) => (w.lemma === lemma ? { ...w, status: capturedOldStatus } : w))
+        );
+        notify(`⚠️ Rollback [${lemma}]: ${errorMsg}`);
+      }
+    }
   };
 
   // Test Session Handlers
@@ -448,11 +541,23 @@ export function App() {
         onClose={() => setShowNewDeckModal(false)}
       />
 
+      {/* Configure Flashcard Session Modal */}
+      <StudySetupModal
+        show={showStudySetupModal}
+        initialDeckId={studySetupDeckId}
+        decks={decks}
+        words={words}
+        cardDeckMapping={cardDeckMapping}
+        onClose={() => setShowStudySetupModal(false)}
+        onLaunchSession={handleLaunchStudySession}
+      />
+
       {/* Persistent Header (When logged in) */}
       {userMode !== 'logged_out' && (
         <Header
           userEmail={userEmail}
           currentPage={currentPage}
+          isDemoMode={isDemoMode}
           onNavigate={setCurrentPage}
           onOpenTestSetup={openTestSetup}
           onLogout={handleLogout}
@@ -493,6 +598,7 @@ export function App() {
           saveTargetDeckId={saveTargetDeckId}
           setSaveTargetDeckId={setSaveTargetDeckId}
           decks={decks}
+          isDemoMode={isDemoMode}
           onNavigate={setCurrentPage}
           onParseSentence={handleParseSentence}
           onSelectToken={handleSelectToken}
@@ -519,6 +625,7 @@ export function App() {
       {currentPage === 'study_deck' && userMode !== 'logged_out' && (
         <DeckGridPage
           selectedDeckId={selectedDeckId}
+          onSelectDeck={setSelectedDeckId}
           decks={decks}
           words={words}
           cardDeckMapping={cardDeckMapping}

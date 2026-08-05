@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { useState, useEffect, useCallback, type Dispatch, type SetStateAction } from 'react';
 import type { DeckItem, NavigationPage } from '../types/app';
 
 interface StudyArcPageProps {
@@ -24,12 +24,59 @@ export function StudyArcPage({
   onStartStudySession,
   onShowNewDeckModal,
 }: StudyArcPageProps) {
+  const [openingDeckId, setOpeningDeckId] = useState<string | null>(null);
+
+  const triggerPopAndFlip = useCallback((deckId: string, action: () => void) => {
+    if (openingDeckId) return;
+    setOpeningDeckId(deckId);
+    setTimeout(() => {
+      action();
+      setOpeningDeckId(null);
+    }, 850);
+  }, [openingDeckId]);
+
+  // Keyboard navigation logic: ArrowLeft/Right = prev/next, Space = View Grid, Enter = Start Review
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+      if (openingDeckId) return;
+
+      const activeDeck = decks[activeIndex];
+
+      if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        setActiveIndex((prev) => Math.max(0, prev - 1));
+      } else if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        setActiveIndex((prev) => Math.min(decks.length - 1, prev + 1));
+      } else if (e.code === 'Space') {
+        e.preventDefault();
+        if (activeDeck) {
+          triggerPopAndFlip(activeDeck.id, () => {
+            setSelectedDeckId(activeDeck.id);
+            onNavigate('study_deck');
+          });
+        }
+      } else if (e.code === 'Enter') {
+        e.preventDefault();
+        if (activeDeck) {
+          onStartStudySession(activeDeck.id);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeIndex, decks, openingDeckId, triggerPopAndFlip, setActiveIndex, setSelectedDeckId, onNavigate, onStartStudySession]);
+
   return (
     <main className="arc-screen">
       <header className="deck-header">
-        <p className="eyebrow">「解せぬ」を、「解せる」へ。</p>
+        <p className="eyebrow"></p>
         <h1>Study Decks</h1>
-        <p className="sub">Tap a card to bring it forward, or create a new deck</p>
+        <p className="sub">
+          Use <kbd>←</kbd> <kbd>→</kbd> to select deck • <kbd>Space</kbd> View Grid • <kbd>Enter</kbd> Start Review
+        </p>
       </header>
 
       <div className="arc-wrap">
@@ -51,23 +98,26 @@ export function StudyArcPage({
             const z = 100 - abs;
             const visible = abs <= 3;
             const stats = deckStats[deck.id] || { total: 0, due: 0 };
+            const isOpening = openingDeckId === deck.id;
 
             const finalTransform = `translateX(${tx}px) translateY(${ty}px) rotate(${angle}deg) scale(${scale})`;
 
             return (
               <div
                 key={deck.id}
-                className={`deck-card ${i === activeIndex ? 'active' : ''}`}
+                className={`deck-card ${i === activeIndex ? 'active' : ''} ${isOpening ? 'opening' : ''}`}
                 style={{
-                  zIndex: z,
+                  zIndex: isOpening ? 1000 : z,
                   opacity: visible ? 1 - abs * 0.16 : 0,
-                  pointerEvents: visible ? 'auto' : 'none',
-                  transform: finalTransform,
+                  pointerEvents: visible && !openingDeckId ? 'auto' : 'none',
+                  transform: isOpening ? undefined : finalTransform,
                 }}
                 onClick={() => {
                   if (i === activeIndex) {
-                    setSelectedDeckId(deck.id);
-                    onNavigate('study_deck');
+                    triggerPopAndFlip(deck.id, () => {
+                      setSelectedDeckId(deck.id);
+                      onNavigate('study_deck');
+                    });
                   } else {
                     setActiveIndex(i);
                   }
@@ -114,15 +164,19 @@ export function StudyArcPage({
               <button
                 className="open-btn"
                 onClick={() => {
-                  setSelectedDeckId(decks[activeIndex].id);
-                  onNavigate('study_deck');
+                  triggerPopAndFlip(decks[activeIndex].id, () => {
+                    setSelectedDeckId(decks[activeIndex].id);
+                    onNavigate('study_deck');
+                  });
                 }}
               >
-                Inspect Deck Grid
+                View Deck Grid
               </button>
               <button
-                className="btn-primary"
-                onClick={() => onStartStudySession(decks[activeIndex].id)}
+                className="open-btn"
+                onClick={() => {
+                  onStartStudySession(decks[activeIndex].id);
+                }}
               >
                 Start Review Session
               </button>

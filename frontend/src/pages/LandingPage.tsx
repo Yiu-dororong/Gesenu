@@ -33,6 +33,14 @@ export function LandingPage({
 }: LandingPageProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const demoTimer1Ref = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const demoTimer2Ref = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearDemoTimers = () => {
+    if (demoTimer1Ref.current) clearTimeout(demoTimer1Ref.current);
+    if (demoTimer2Ref.current) clearTimeout(demoTimer2Ref.current);
+  };
+
   const [demoStage, setDemoStage] = useState<0 | 1 | 2>(0);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [deckPositions, setDeckPositions] = useState<{ x: number; y: number }[]>([]);
@@ -391,6 +399,7 @@ export function LandingPage({
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       cancelAnimationFrame(animFrameId);
       observer.disconnect();
+      clearDemoTimers();
     };
   }, []);
 
@@ -669,13 +678,14 @@ export function LandingPage({
                     top: pos.y,
                   }}
                   onClick={() => {
+                    clearDemoTimers();
                     if (isTarget) {
                       setIsCorrect(true);
                     } else {
                       setIsCorrect(null);
-                      setTimeout(() => {
+                      demoTimer1Ref.current = setTimeout(() => {
                         setIsCorrect(false);
-                        setTimeout(() => {
+                        demoTimer2Ref.current = setTimeout(() => {
                           setIsCorrect(null);
                         }, 500);
                       }, 10);

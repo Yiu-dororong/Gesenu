@@ -23,8 +23,5 @@ export interface DeckItem {
   jp: string;
   en: string;
   color: string;
-  isStub?: boolean;
-  stubCount?: number;
-  stubDue?: number;
   motifSvg?: ReactNode;
 }

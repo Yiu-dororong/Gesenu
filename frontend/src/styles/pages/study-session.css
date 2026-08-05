@@ -112,6 +112,62 @@
   gap: 0.6rem;
 }
 
+/* CARD NAVIGATION & KEYBOARD SHORTCUTS BAR */
+.card-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.25rem 0;
+}
+
+.card-nav-btn {
+  background: rgba(242, 233, 218, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--ivory);
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  font-size: 0.825rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.card-nav-btn:hover:not(:disabled) {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(199, 154, 68, 0.12);
+}
+
+.card-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.kbd-shortcuts-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--ivory-dim);
+}
+
+.kbd-shortcuts-hint span {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.kbd-shortcuts-hint kbd {
+  background: #0d0b10;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: var(--gold);
+}
+
 .fsm-btn {
   padding: 0.8rem 0.4rem;
   border-radius: 10px;
@@ -124,7 +180,7 @@
 .fsm-btn.forgot { background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.3); color: #f87171; }
 .fsm-btn.hard { background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.3); color: #fbbf24; }
 .fsm-btn.good { background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.3); color: #34d399; }
-.fsm-btn.easy { background: rgba(199, 154, 68, 0.15); border-color: var(--gold); color: var(--gold); }
+.fsm-btn.easy { background: rgba(168, 85, 247, 0.16); border-color: rgba(168, 85, 247, 0.4); color: #c084fc; }
 
 @media (max-width: 600px) {
   .fsm-action-buttons { grid-template-columns: repeat(2, 1fr); }

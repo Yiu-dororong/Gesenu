@@ -110,3 +110,17 @@
   flex-wrap: wrap;
   gap: 1rem;
 }
+
+.deck-nav-bar .back-btn,
+.deck-nav-bar .open-btn,
+.deck-nav-bar .btn-primary {
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.25rem;
+  font-size: 0.825rem;
+  font-weight: 600;
+  box-sizing: border-box;
+  line-height: 1;
+}

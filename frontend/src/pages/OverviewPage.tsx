@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { WordCard, DeckItem, NavigationPage } from '../types/app';
 
 interface OverviewPageProps {
@@ -10,6 +11,58 @@ interface OverviewPageProps {
   onOpenTestSetup: () => void;
 }
 
+interface DiscoverCategory {
+  id: string;
+  icon: string;
+  title: string;
+  subtitle: string;
+  items: { name: string; url: string; note?: string }[];
+}
+
+const DISCOVER_CATEGORIES: DiscoverCategory[] = [
+  {
+    id: 'novel',
+    icon: '📚',
+    title: 'Read a novel',
+    subtitle: 'Classic literature & web fiction',
+    items: [
+      { name: '青空文庫', url: 'https://www.aozora.gr.jp/', note: 'Aozora Bunko · Public domain classics' },
+      { name: 'カクヨム', url: 'https://kakuyomu.jp/', note: 'Kakuyomu · Modern web novels' },
+      { name: '小説家になろう', url: 'https://syosetu.com/', note: 'Shousetsuka ni Narou · Web stories' },
+    ],
+  },
+  {
+    id: 'news',
+    icon: '📰',
+    title: "Read today's news",
+    subtitle: 'Furigana & daily current affairs',
+    items: [
+      { name: 'NHK NEWS WEB EASY', url: 'https://www3.nhk.or.jp/news/easy/', note: 'Easy Japanese with furigana' },
+      { name: 'NHK NEWS WEB', url: 'https://www3.nhk.or.jp/news/', note: 'Standard daily Japanese news' },
+    ],
+  },
+  {
+    id: 'social',
+    icon: '💬',
+    title: 'See everyday Japanese',
+    subtitle: 'Social media & discussion boards',
+    items: [
+      { name: 'X', url: 'https://x.com/', note: 'Real-time casual posts & trends' },
+      { name: '2ch (5ch)', url: 'https://5ch.net/', note: 'Colloquial forum discussions & slang' },
+    ],
+  },
+  {
+    id: 'video',
+    icon: '🎥',
+    title: 'Watch something',
+    subtitle: 'Video communities & streaming',
+    items: [
+      { name: 'YouTube', url: 'https://www.youtube.com/', note: 'Japanese channels & vlogs' },
+      { name: 'ニコニコ動画', url: 'https://www.nicovideo.jp/', note: 'Niconico · Japanese video platform' },
+    ],
+  },
+];
+
 export function OverviewPage({
   userEmail,
   totalCards,
@@ -19,6 +72,12 @@ export function OverviewPage({
   onNavigate,
   onOpenTestSetup,
 }: OverviewPageProps) {
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  const toggleCategory = (id: string) => {
+    setActiveCategory((prev) => (prev === id ? null : id));
+  };
+
   return (
     <main className="hub-container">
       <div className="hub-welcome">
@@ -94,6 +153,54 @@ export function OverviewPage({
             <span className="stat-value">{decks.length}</span>
             <span className="stat-label">Active Decks</span>
           </div>
+        </div>
+      </section>
+
+      {/* Discover Section */}
+      <section className="discover-section">
+        <div className="discover-header">
+          <h3 className="discover-title jp-font">Discover Japanese Media & Content</h3>
+          <p className="discover-sub">Explore authentic Japanese sources to encounter real-world vocabulary</p>
+        </div>
+
+        <div className="discover-grid">
+          {DISCOVER_CATEGORIES.map((cat) => {
+            const isOpen = activeCategory === cat.id;
+            return (
+              <div key={cat.id} className={`discover-card ${isOpen ? 'active' : ''}`}>
+                <button
+                  className="discover-btn"
+                  onClick={() => toggleCategory(cat.id)}
+                  aria-expanded={isOpen}
+                >
+                  <span className="discover-icon">{cat.icon}</span>
+                  <div className="discover-text">
+                    <span className="discover-btn-title">{cat.title}</span>
+                    <span className="discover-btn-sub">{cat.subtitle}</span>
+                  </div>
+                  <span className="discover-chevron">{isOpen ? '▲' : '▼'}</span>
+                </button>
+
+                {isOpen && (
+                  <div className="discover-items-list">
+                    {cat.items.map((item) => (
+                      <a
+                        key={item.name}
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="discover-item-link"
+                      >
+                        <span className="item-name jp-font">{item.name}</span>
+                        {item.note && <span className="item-note">{item.note}</span>}
+                        <span className="external-arrow">↗</span>
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </section>
     </main>

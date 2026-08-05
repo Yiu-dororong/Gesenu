@@ -1,5 +1,6 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { useEffect, useCallback, type Dispatch, type SetStateAction } from 'react';
 import type { WordCard, NavigationPage } from '../types/app';
+import type { ReviewFeedback } from '../services/api/types';
 
 interface StudySessionPageProps {
   studyQueue: WordCard[];
@@ -8,7 +9,7 @@ interface StudySessionPageProps {
   isFlipped: boolean;
   setIsFlipped: (val: boolean) => void;
   onNavigate: (page: NavigationPage) => void;
-  onAdvanceFSM: (lemma: string, targetStatus?: string) => void;
+  onAdvanceFSM: (lemma: string, targetStatus?: string, feedback?: ReviewFeedback) => void;
   onNotify: (msg: string) => void;
 }
 
@@ -23,6 +24,60 @@ export function StudySessionPage({
   onNotify,
 }: StudySessionPageProps) {
   const currentCard = studyQueue[studyIndex];
+
+  const handleFSMReview = useCallback(
+    (targetStatus: string, feedback: ReviewFeedback, msg: string) => {
+      if (!currentCard) return;
+      onAdvanceFSM(currentCard.lemma, targetStatus, feedback);
+      onNotify(msg);
+      if (studyIndex + 1 < studyQueue.length) {
+        setStudyIndex((i) => i + 1);
+      } else {
+        onNavigate('overview');
+      }
+      setIsFlipped(false);
+    },
+    [currentCard, studyIndex, studyQueue.length, onAdvanceFSM, onNotify, setStudyIndex, onNavigate, setIsFlipped]
+  );
+
+  // Keyboard navigation shortcuts: Space = flip, ArrowLeft = prev, ArrowRight = next, 1..4 = FSM review
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        setIsFlipped(!isFlipped);
+      } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        if (studyIndex > 0) {
+          setStudyIndex((i) => i - 1);
+          setIsFlipped(false);
+        }
+      } else if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        if (studyIndex < studyQueue.length - 1) {
+          setStudyIndex((i) => i + 1);
+          setIsFlipped(false);
+        }
+      } else if (e.key === '1' || e.code === 'Digit1' || e.code === 'Numpad1') {
+        e.preventDefault();
+        handleFSMReview('New', 'forgot', 'FSM: Reset to [New]');
+      } else if (e.key === '2' || e.code === 'Digit2' || e.code === 'Numpad2') {
+        e.preventDefault();
+        handleFSMReview('Learning', 'hard', 'FSM: Set to [Learning]');
+      } else if (e.key === '3' || e.code === 'Digit3' || e.code === 'Numpad3') {
+        e.preventDefault();
+        handleFSMReview('Known', 'good', 'FSM: Advanced to [Known]');
+      } else if (e.key === '4' || e.code === 'Digit4' || e.code === 'Numpad4') {
+        e.preventDefault();
+        handleFSMReview('Mastered', 'easy', 'FSM: Advanced to [Mastered]');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [studyIndex, studyQueue.length, isFlipped, currentCard, handleFSMReview, setStudyIndex, setIsFlipped]);
 
   return (
     <main className="session-container">
@@ -42,6 +97,7 @@ export function StudySessionPage({
             className={`flashcard-glass ${isFlipped ? 'flipped' : ''}`}
             onClick={() => setIsFlipped(!isFlipped)}
           >
+            {/* Front Side: Japanese Lemma, Reading, and Context Sentence */}
             <div className="card-face front">
               <span className="card-jlpt-tag">{currentCard.jlpt_level}</span>
               <div className="card-main-lemma jp-font">{currentCard.lemma}</div>
@@ -51,71 +107,80 @@ export function StudySessionPage({
                 "{currentCard.context_sentence}"
               </div>
 
-              <p className="flip-hint">Click card to reveal meaning</p>
+              <p className="flip-hint">Click card or press Space to reveal meaning</p>
             </div>
 
+            {/* Back Side: English Definition Only */}
             <div className="card-face back">
               <div className="card-meaning-title">English Definition</div>
               <p className="card-meaning-text">{currentCard.meaning}</p>
-
-              <div className="context-quote jp-font">
-                "{currentCard.context_sentence}"
-              </div>
+              <p className="flip-hint">Click card or press Space to flip back</p>
             </div>
           </div>
 
-          {/* Feedback Actions (Optimistic UI FSM) */}
+          {/* Prev / Next Card Navigation Buttons */}
+          <div className="card-nav-bar">
+            <button
+              className="card-nav-btn"
+              disabled={studyIndex === 0}
+              onClick={() => {
+                if (studyIndex > 0) {
+                  setStudyIndex((i) => i - 1);
+                  setIsFlipped(false);
+                }
+              }}
+            >
+              ‹ Prev Card
+            </button>
+
+            <div className="kbd-shortcuts-hint">
+              <span><kbd>←</kbd> / <kbd>→</kbd> Prev/Next</span>
+              <span><kbd>Space</kbd> Flip</span>
+              <span><kbd>1</kbd>–<kbd>4</kbd> Review</span>
+            </div>
+
+            <button
+              className="card-nav-btn"
+              disabled={studyIndex >= studyQueue.length - 1}
+              onClick={() => {
+                if (studyIndex < studyQueue.length - 1) {
+                  setStudyIndex((i) => i + 1);
+                  setIsFlipped(false);
+                }
+              }}
+            >
+              Next Card ›
+            </button>
+          </div>
+
+          {/* Feedback Actions (Optimistic UI FSM) with Hotkeys 1-4 */}
           <div className="fsm-action-buttons">
             <button
               className="fsm-btn forgot"
-              onClick={() => {
-                onAdvanceFSM(currentCard.lemma, 'New');
-                onNotify('FSM: Reset to [New]');
-                if (studyIndex + 1 < studyQueue.length) setStudyIndex((i) => i + 1);
-                else onNavigate('overview');
-                setIsFlipped(false);
-              }}
+              onClick={() => handleFSMReview('New', 'forgot', 'FSM: Reset to [New]')}
             >
-              Forgot It (Reset)
+              <kbd style={{ marginRight: '0.35rem', fontSize: '0.7rem' }}>1</kbd> Forgot (Reset)
             </button>
 
             <button
               className="fsm-btn hard"
-              onClick={() => {
-                onAdvanceFSM(currentCard.lemma, 'Learning');
-                onNotify('FSM: Set to [Learning]');
-                if (studyIndex + 1 < studyQueue.length) setStudyIndex((i) => i + 1);
-                else onNavigate('overview');
-                setIsFlipped(false);
-              }}
+              onClick={() => handleFSMReview('Learning', 'hard', 'FSM: Set to [Learning]')}
             >
-              Hard (Learning)
+              <kbd style={{ marginRight: '0.35rem', fontSize: '0.7rem' }}>2</kbd> Hard (Learning)
             </button>
 
             <button
               className="fsm-btn good"
-              onClick={() => {
-                onAdvanceFSM(currentCard.lemma, 'Known');
-                onNotify('FSM: Advanced to [Known]');
-                if (studyIndex + 1 < studyQueue.length) setStudyIndex((i) => i + 1);
-                else onNavigate('overview');
-                setIsFlipped(false);
-              }}
+              onClick={() => handleFSMReview('Known', 'good', 'FSM: Advanced to [Known]')}
             >
-              Good (Known)
+              <kbd style={{ marginRight: '0.35rem', fontSize: '0.7rem' }}>3</kbd> Good (Known)
             </button>
 
             <button
               className="fsm-btn easy"
-              onClick={() => {
-                onAdvanceFSM(currentCard.lemma, 'Mastered');
-                onNotify('FSM: Advanced to [Mastered]');
-                if (studyIndex + 1 < studyQueue.length) setStudyIndex((i) => i + 1);
-                else onNavigate('overview');
-                setIsFlipped(false);
-              }}
+              onClick={() => handleFSMReview('Mastered', 'easy', 'FSM: Advanced to [Mastered]')}
             >
-              Easy (Mastered)
+              <kbd style={{ marginRight: '0.35rem', fontSize: '0.7rem' }}>4</kbd> Easy (Mastered)
             </button>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { DeckItem, ParseSentenceResponse, TokenItem, DictLookupResponse, NavigationPage } from '../types/app';
 import { SAMPLE_SENTENCES } from '../constants/decks';
 
@@ -12,6 +13,7 @@ interface EncounterPageProps {
   saveTargetDeckId: string;
   setSaveTargetDeckId: (id: string) => void;
   decks: DeckItem[];
+  isDemoMode?: boolean;
   onNavigate: (page: NavigationPage) => void;
   onParseSentence: (textToParse?: string) => void;
   onSelectToken: (token: TokenItem) => void;
@@ -29,11 +31,21 @@ export function EncounterPage({
   saveTargetDeckId,
   setSaveTargetDeckId,
   decks,
+  isDemoMode,
   onNavigate,
   onParseSentence,
   onSelectToken,
   onSaveCard,
 }: EncounterPageProps) {
+  const [showOnlySelectable, setShowOnlySelectable] = useState<boolean>(false);
+  const [showPOS, setShowPOS] = useState<boolean>(false);
+
+  const displayedTokens = parseResult
+    ? showOnlySelectable
+      ? parseResult.tokens.filter((t) => t.is_selectable)
+      : parseResult.tokens
+    : [];
+
   return (
     <main className="container">
       <div className="deck-nav-bar">
@@ -50,24 +62,35 @@ export function EncounterPage({
 
         <div className="sentence-input-area">
           <textarea
-            className="sentence-textarea jp-font"
-            placeholder="Type or paste a Japanese sentence..."
+            className={`sentence-textarea jp-font ${isDemoMode ? 'demo-locked' : ''}`}
+            placeholder={
+              isDemoMode
+                ? 'Demo Session: Textarea locked. Select preset sentences below...'
+                : 'Type or paste a Japanese sentence...'
+            }
             value={sentenceInput}
-            onChange={(e) => setSentenceInput(e.target.value)}
+            readOnly={isDemoMode}
+            onChange={(e) => !isDemoMode && setSentenceInput(e.target.value)}
           />
+
+          {isDemoMode && (
+            <div className="demo-locked-notice">
+              🔒 <strong>Demo Session:</strong> Custom sentence input is locked. Select preset sentences (<strong>1</strong>, <strong>2</strong>, <strong>3</strong>) below to test parsing.
+            </div>
+          )}
 
           <div className="preset-pills">
             <span style={{ fontSize: '0.8rem', color: 'var(--ivory-dim)' }}>Presets:</span>
-            {SAMPLE_SENTENCES.map((preset, idx) => (
+            {SAMPLE_SENTENCES.map((preset, index) => (
               <button
-                key={idx}
+                key={preset}
                 className="preset-btn jp-font"
                 onClick={() => {
                   setSentenceInput(preset);
                   onParseSentence(preset);
                 }}
               >
-                "{preset.slice(0, 14)}..."
+                {index + 1}
               </button>
             ))}
           </div>
@@ -82,20 +105,41 @@ export function EncounterPage({
         {/* Candidate Tags */}
         {parseResult && (
           <div>
-            <h4 style={{ color: 'var(--ivory)', fontSize: '0.95rem', marginTop: '1.5rem', marginBottom: '0.5rem' }}>
-              Parsed Candidate Tokens:
-            </h4>
+            <div className="parse-results-header">
+              <h4 className="parse-results-title">
+                Parsed Candidate Tokens ({displayedTokens.length}):
+              </h4>
+
+              <div className="parse-toggle-controls">
+                <button
+                  type="button"
+                  className={`toggle-filter-btn ${showOnlySelectable ? 'active' : ''}`}
+                  onClick={() => setShowOnlySelectable((prev) => !prev)}
+                >
+                  {showOnlySelectable ? '✨ Filter: Selectable Only' : '🌐 Filter: All Tokens'}
+                </button>
+
+                <button
+                  type="button"
+                  className={`toggle-filter-btn ${showPOS ? 'active' : ''}`}
+                  onClick={() => setShowPOS((prev) => !prev)}
+                >
+                  {showPOS ? '🏷️ POS: Shown' : '🏷️ POS: Hidden'}
+                </button>
+              </div>
+            </div>
+
             <div className="token-strip">
-              {parseResult.tokens.map((token, idx) => (
+              {displayedTokens.map((token, idx) => (
                 <div
-                  key={idx}
+                  key={`${token.lemma}_${token.surface}_${idx}`}
                   className={`token-tag ${token.is_selectable ? 'selectable' : 'non-selectable'} ${
                     selectedToken?.lemma === token.lemma ? 'active' : ''
                   }`}
                   onClick={() => onSelectToken(token)}
                 >
                   <span className="token-surface jp-font">{token.surface}</span>
-                  <span className="token-pos">{token.pos}</span>
+                  {showPOS && <span className="token-pos">{token.pos}</span>}
                 </div>
               ))}
             </div>
