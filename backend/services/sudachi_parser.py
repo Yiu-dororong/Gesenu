@@ -49,7 +49,7 @@ SELECTABLE_POS_HEADS = {
 }
 
 # Non-content words to exclude even if noun (e.g. formal nouns, symbols)
-EXCLUDED_POS_SUBDETAILS = {"非自立可能", "接尾", "数詞"}
+EXCLUDED_POS_SUBDETAILS = {"補助記号", "助詞", "助動詞", "数詞"}
 
 
 def katakana_to_hiragana(katakana_str: str) -> str:

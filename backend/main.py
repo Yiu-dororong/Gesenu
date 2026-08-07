@@ -172,6 +172,7 @@ app.add_middleware(
     allow_origins=["http://localhost:5173",
                    "http://127.0.0.1:5173",
                    "http://localhost:5174",
+                   "http://127.0.0.1:5174",
                    "*"],
     allow_credentials=True,
     allow_methods=["*"],
@@ -229,7 +230,7 @@ def get_words() -> WordCardResponse:
                 " live from Supabase PostgreSQL!"
             )
         except Exception as e:
-            log.error("❌ Supabase query failed (%s). Using fallback dataset.", e)
+            log.error("Supabase query failed (%s). Using fallback dataset.", e)
             return WordCardResponse(
                 words=FALLBACK_WORDS,
                 source="fallback_on_server_failure",
@@ -237,7 +238,7 @@ def get_words() -> WordCardResponse:
                 " Using fallback sample words."
             )
 
-    log.error("❌ Supabase client is not initialized. Using fallback dataset.")
+    log.error("Supabase client is not initialized. Using fallback dataset.")
     return WordCardResponse(
         words=FALLBACK_WORDS,
         source="fallback_on_server_failure",
