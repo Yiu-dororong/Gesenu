@@ -23,7 +23,7 @@ export function AuthModal({
     <div className="modal-backdrop">
       <div className="modal-content">
         <h2 className="jp-font">Sign In to Gesenu</h2>
-        <p className="sub">Experience contract-first Japanese learning with FSM SRS.</p>
+        <p className="sub">Experience contract-first Japanese learning.</p>
 
         <button className="btn-social-oauth" onClick={onLoginGuest}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -44,7 +44,7 @@ export function AuthModal({
             required
             className="input-field"
           />
-          <button type="submit" className="btn-primary" style={{ width: '100%' }}>
+          <button type="submit" className="open-btn" style={{ width: '100%' }}>
             Enter Hub
           </button>
         </form>

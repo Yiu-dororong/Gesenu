@@ -33,7 +33,7 @@ export function CreateDeckModal({
 
         <form onSubmit={onCreateDeck} className="auth-form">
           <div>
-            <label className="input-label">Japanese Kanji / Title</label>
+            <label className="input-label">Theme / Title</label>
             <input
               type="text"
               placeholder="e.g. 旅, 読書, 科学"
@@ -45,7 +45,7 @@ export function CreateDeckModal({
           </div>
 
           <div>
-            <label className="input-label">English Theme / Subtitle</label>
+            <label className="input-label">English Subtitle</label>
             <input
               type="text"
               placeholder="e.g. Travel & Adventure"
@@ -77,7 +77,7 @@ export function CreateDeckModal({
             </div>
           </div>
 
-          <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '1rem' }}>
+          <button type="submit" className="open-btn" style={{ width: '100%', marginTop: '1rem' }}>
             Confirm Deck Creation
           </button>
         </form>

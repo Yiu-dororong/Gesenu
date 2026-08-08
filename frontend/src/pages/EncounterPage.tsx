@@ -96,7 +96,7 @@ export function EncounterPage({
           </div>
 
           <div style={{ marginTop: '0.5rem' }}>
-            <button className="btn-primary" onClick={() => onParseSentence()} disabled={parsing}>
+            <button className="open-btn" onClick={() => onParseSentence()} disabled={parsing}>
               {parsing ? 'Parsing with SudachiPy...' : 'Parse Sentence'}
             </button>
           </div>

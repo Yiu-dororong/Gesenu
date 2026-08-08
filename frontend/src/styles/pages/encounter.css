@@ -55,6 +55,7 @@
 }
 
 .preset-btn:hover { border-color: var(--gold); color: var(--gold); }
+.preset-btn.selected { background: rgba(199, 154, 68, 0.25); border-color: var(--gold); color: var(--gold); }
 
 .token-strip {
   display: flex;

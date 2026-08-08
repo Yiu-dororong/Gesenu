@@ -455,7 +455,7 @@ export function maskContextSentence(
     const maskedText = sentence.slice(0, card.span_start) + maskSymbol + sentence.slice(card.span_end);
     return { maskedText, surface };
   }
-
+// Fallback: Try to find the surface form or lemma in the sentence
   if (card.surface_form && sentence.includes(card.surface_form)) {
     const idx = sentence.indexOf(card.surface_form);
     const end = idx + card.surface_form.length;

@@ -20,7 +20,7 @@ export function Header({
   return (
     <header className="persistent-header">
       <div className="header-brand" onClick={() => onNavigate('overview')}>
-        <span className="brand-logo jp-font">解</span>
+        <span className="brand-logo jp-font"></span>
         <span className="brand-title">Gesenu</span>
         {isDemoMode && (
           <span

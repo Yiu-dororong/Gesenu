@@ -154,7 +154,7 @@ export function App() {
   }, [words, decks, cardDeckMapping]);
 
   // Notifications
-  const notify = useCallback((msg: string) => {
+  const notify = useCallback((msg: string, duration = 3000) => {
     if (notificationTimerRef.current) {
       clearTimeout(notificationTimerRef.current);
     }
@@ -163,7 +163,7 @@ export function App() {
       if (isMountedRef.current) {
         setNotification(null);
       }
-    }, 3000);
+    }, duration);
   }, []);
 
   // Fetch Test Words from Backend API (/api/test-words)
@@ -536,7 +536,7 @@ export function App() {
         setWords((prev) =>
           prev.map((w) => (w.lemma === lemma ? { ...w, status: capturedOldStatus } : w))
         );
-        notify(`⚠️ Rollback [${lemma}]: ${errorMsg}`);
+        notify(`⚠️ Rollback [${lemma}]: ${errorMsg}`, 5000);
       }
     }
   };

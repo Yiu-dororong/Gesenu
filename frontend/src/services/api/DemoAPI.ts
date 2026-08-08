@@ -75,8 +75,8 @@ export class DemoAPI implements GesenuAPI {
       const currentCard = this.cards[targetIndex];
       prevStatus = currentCard.status;
 
-      // SCRIPTED FAILURE DEMO: Intentionally reject review on "社会現象" for the first attempt
-      if ((wordId === '社会現象' || wordId === '分解') && !this.hasSimulatedFailureFired) {
+      // SCRIPTED FAILURE DEMO: Intentionally reject review on the first card on each deck for the first attempt
+      if ((wordId === 'カフェ' || wordId === '見据える' || wordId === 'ハマる') && !this.hasSimulatedFailureFired) {
         this.hasSimulatedFailureFired = true;
         return Promise.reject(new Error('Network drop (Demo script: Testing optimistic UI rollback)'));
       }

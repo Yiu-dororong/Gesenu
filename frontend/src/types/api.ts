@@ -219,6 +219,16 @@ export interface components {
              */
             pos_detail: string;
             /**
+             * Span Start
+             * @example 0
+             */
+            span_start?: number | null;
+            /**
+             * Span End
+             * @example 3
+             */
+            span_end?: number | null;
+            /**
              * Is Selectable
              * @example true
              */
@@ -249,6 +259,26 @@ export interface components {
              * @example 解せる
              */
             lemma: string;
+            /**
+             * Surface Form
+             * @example 解せる
+             */
+            surface_form?: string | null;
+            /**
+             * Span Start
+             * @example 17
+             */
+            span_start?: number | null;
+            /**
+             * Span End
+             * @example 20
+             */
+            span_end?: number | null;
+            /**
+             * Sentence Id
+             * @example sent-1
+             */
+            sentence_id?: string | null;
             /**
              * Reading
              * @example かいせる

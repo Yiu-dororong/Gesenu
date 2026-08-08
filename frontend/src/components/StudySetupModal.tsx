@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { DeckItem, WordCard } from '../types/app';
 
 interface StudySetupModalProps {
@@ -21,6 +21,15 @@ export function StudySetupModal({
   onLaunchSession,
 }: StudySetupModalProps) {
   const [targetDeckId, setTargetDeckId] = useState<string>(initialDeckId || 'all');
+
+  // Reset all selections whenever the modal opens so previous state doesn't bleed through
+  useEffect(() => {
+    if (show) {
+      setTargetDeckId(initialDeckId || 'all');
+      setStatusMode('due');
+      setCustomStatuses(['New', 'Learning']);
+    }
+  }, [show, initialDeckId]);
   type StatusPresetMode = 'due' | 'new' | 'learning' | 'all' | 'custom';
   const [statusMode, setStatusMode] = useState<StatusPresetMode>('due');
   const [customStatuses, setCustomStatuses] = useState<string[]>(['New', 'Learning']);
