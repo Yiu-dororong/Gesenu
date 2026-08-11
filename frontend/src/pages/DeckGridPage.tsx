@@ -47,7 +47,7 @@ export function DeckGridPage({
   };
 
   const filteredWords = words.filter((w) => {
-    const dId = cardDeckMapping[w.lemma] || 'matsu';
+    const dId = cardDeckMapping[w.lemma] || 'unclassified';
     const matchesDeck = dId === selectedDeckId || selectedDeckId === 'unclassified';
     const matchesStatus = deckFilterStatus === 'all' || w.status === deckFilterStatus;
     return matchesDeck && matchesStatus;

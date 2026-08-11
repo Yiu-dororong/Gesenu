@@ -572,10 +572,10 @@ export function LandingPage({
               title="Click to toggle pipeline stages"
             >
               <div className="cta-demo-hint">
-                {demoStage === 0 && '🖱️ Step 1: Click to parse sentence'}
-                {demoStage === 1 && '⚡ Step 2: Parsed! Hover keywords for meanings (Click again for Recall Test)'}
+                {demoStage === 0 && 'Step 1: Click to parse sentence'}
+                {demoStage === 1 && 'Step 2: Parsed! Hover keywords for meanings (Click again for Recall Test)'}
                 {demoStage === 2 && isCorrect && '🎉 Step 3: 解せる！ (Correct! Click to reset)'}
-                {demoStage === 2 && !isCorrect && '🎯 Step 3: Select the matching word from the 5 background decks below!'}
+                {demoStage === 2 && !isCorrect && 'Step 3: Select the matching word from the 5 background decks below!'}
               </div>
 
               {/* STAGE 0: Whole Sentence */}

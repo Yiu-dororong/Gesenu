@@ -24,9 +24,8 @@ const DISCOVER_CATEGORIES: DiscoverCategory[] = [
     id: 'novel',
     icon: '📚',
     title: 'Read a novel',
-    subtitle: 'Classic literature & web fiction',
+    subtitle: 'Modern web fiction & stories',
     items: [
-      { name: '青空文庫', url: 'https://www.aozora.gr.jp/', note: 'Aozora Bunko · Public domain classics' },
       { name: 'カクヨム', url: 'https://kakuyomu.jp/', note: 'Kakuyomu · Modern web novels' },
       { name: '小説家になろう', url: 'https://syosetu.com/', note: 'Shousetsuka ni Narou · Web stories' },
     ],

@@ -239,6 +239,29 @@ export const DEFAULT_DECKS: DeckItem[] = [
   },
 ];
 
+export const INITIAL_CARD_DECK_MAPPING: Record<string, string> = {
+  // Theme 1: Work (Sentence 3: 曖昧だったコンセプト...)
+  見据える: 'work',
+  現象: 'work',
+  じわじわ: 'work',
+  コンセプト: 'work',
+  曖昧: 'work',
+
+  // Theme 2: Life (Sentence 2: 最近ハマっているアイドル...)
+  ハマる: 'life',
+  かわいい: 'life',
+  推し: 'life',
+  キラキラ: 'life',
+  アイドル: 'life',
+
+  // Theme 3: Leisure (Sentence 1: 天気予報を確認して...)
+  天気予報: 'leisure',
+  散歩: 'leisure',
+  カフェ: 'leisure',
+  ぶらぶら: 'leisure',
+  良い: 'leisure',
+};
+
 export const SEEDED_DEMO_CARDS: WordCard[] = [
   // --- WORK DECK (1 Sentence) ---
   {

@@ -14,6 +14,7 @@ import {
   SAMPLE_SENTENCES,
   DEFAULT_DECKS,
   SEEDED_DEMO_CARDS,
+  INITIAL_CARD_DECK_MAPPING,
   DEMO_PARSE_MAP,
   getSentenceId,
   interleaveCardsBySentence,
@@ -67,7 +68,9 @@ export function App() {
   // Decks & Cards Collection State
   const [decks, setDecks] = useState<DeckItem[]>(DEFAULT_DECKS);
   const [words, setWords] = useState<WordCard[]>(SEEDED_DEMO_CARDS);
-  const [cardDeckMapping, setCardDeckMapping] = useState<Record<string, string>>({});
+  const [cardDeckMapping, setCardDeckMapping] = useState<Record<string, string>>(
+    INITIAL_CARD_DECK_MAPPING
+  );
 
   // Selected Deck View State
   const [selectedDeckId, setSelectedDeckId] = useState<string>('work');
@@ -181,11 +184,13 @@ export function App() {
           return [...data.words, ...customOrRemaining];
         });
 
-        // Automatically assign all fetched /api/test-words to the 'kiku' (Demo & Test Data) deck
+        // Assign newly fetched /api/test-words to 'unclassified' (未分類) if not already mapped
         setCardDeckMapping((prev) => {
           const updated = { ...prev };
           data.words.forEach((w: WordCard) => {
-            updated[w.lemma] = 'kiku';
+            if (!updated[w.lemma]) {
+              updated[w.lemma] = 'unclassified';
+            }
           });
           return updated;
         });
@@ -481,7 +486,7 @@ export function App() {
     setShowNewDeckModal(false);
     setNewDeckJp('');
     setNewDeckEn('');
-    notify(`Created new Hanafuda deck: ${newDeck.jp} (${newDeck.en})`);
+    notify(`Created new deck: ${newDeck.jp} (${newDeck.en})`);
   };
 
   // Study Session Handlers (Modal Trigger & Queue Launcher)
@@ -553,10 +558,6 @@ export function App() {
       return selectedTestDeckIds.includes(dId);
     });
 
-    console.log('[Test] Selected deck IDs:', selectedTestDeckIds);
-    console.log('[Test] cardDeckMapping:', cardDeckMapping);
-    console.log('[Test] Deck-filtered pool:', pool.map(c => ({ lemma: c.lemma, deck: cardDeckMapping[c.lemma], context_sentence: c.context_sentence?.slice(0, 20) })));
-
     if (pool.length === 0) {
       notify('No cards available in selected decks for testing.');
       return;
@@ -573,8 +574,6 @@ export function App() {
         sentenceGroups.get(sId)!.push(card);
       }
 
-      console.log('[Test] Sentence groups:', [...sentenceGroups.entries()].map(([k, v]) => ({ sId: k, cards: v.map(c => c.lemma), sentence: v[0]?.context_sentence?.slice(0, 30) })));
-
       // Randomly pick 1 card/question per sentence
       const strictPool: WordCard[] = [];
       sentenceGroups.forEach((cardsInSentence) => {
@@ -583,7 +582,6 @@ export function App() {
       });
 
       pool = strictPool;
-      console.log('[Test] Strict pool (1 per sentence):', pool.map(c => ({ lemma: c.lemma, sentence: c.context_sentence?.slice(0, 30) })));
     }
 
     const interleavedPool = interleaveCardsBySentence(pool);
@@ -600,6 +598,7 @@ export function App() {
     const currentCard = testQueue[testIndex];
     if (!currentCard) return;
 
+    // Note: toLowerCase() is a no-op on Kanji/Kana, but safely handles mixed Latin loanwords/acronyms (e.g. IT, AI, SNS)
     const cleanInput = userAnswer.trim().toLowerCase();
     const isExactSurfaceMatch =
       Boolean(currentCard.surface_form) &&
@@ -627,7 +626,7 @@ export function App() {
     if (testIndex + 1 < testQueue.length) {
       setTestIndex((i) => i + 1);
     } else {
-      notify(`Test finished! Final Score: ${testScore + (testFeedback === 'correct' ? 1 : 0)} / ${testQueue.length}`);
+      notify(`Test finished! Final Score: ${testScore} / ${testQueue.length}`);
       setCurrentPage('overview');
     }
   };
