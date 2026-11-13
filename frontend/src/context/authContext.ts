@@ -12,8 +12,8 @@ export interface AuthContextValue {
   user: User | null;
   /** True while the initial session restore is in-flight. */
   loading: boolean;
-  /** Redirect to Google OAuth2 consent screen. */
-  signInWithGoogle: () => Promise<void>;
+  /** Redirect to X (formerly Twitter) OAuth2 consent screen. */
+  signInWithX: () => Promise<void>;
   /** Redirect to Discord OAuth2 consent screen. */
   signInWithDiscord: () => Promise<void>;
   /** Sign out and clear the local session. */

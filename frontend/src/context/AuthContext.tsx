@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    // Subscribe to auth state changes: SIGNED_IN (includes Google/Discord OAuth redirect),
+    // Subscribe to auth state changes: SIGNED_IN (includes X/Discord OAuth redirect),
     // SIGNED_OUT, TOKEN_REFRESHED, etc.
     const {
       data: { subscription },
@@ -79,9 +79,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, [syncSessionCookie, clearSessionCookie]);
 
-  const signInWithGoogle = useCallback(async () => {
+  const signInWithX = useCallback(async () => {
     await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider: 'twitter',
       options: {
         redirectTo: window.location.origin,
       },
@@ -112,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         user: session?.user ?? null,
         loading,
-        signInWithGoogle,
+        signInWithX,
         signInWithDiscord,
         signOut,
         getAccessToken,

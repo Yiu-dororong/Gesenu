@@ -263,7 +263,7 @@ export function App() {
   };
 
   // handleLoginStandard removed — real auth is handled by Supabase OAuth redirect
-  // (signInWithGoogle / signInWithDiscord in AuthModal via AuthContext).
+  // (signInWithX / signInWithDiscord in AuthModal via AuthContext).
   // After the OAuth redirect completes, onAuthStateChange in AuthContext fires
   // automatically and updates the session, which flows into userMode above.
 
