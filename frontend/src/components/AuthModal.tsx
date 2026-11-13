@@ -45,7 +45,7 @@ export function AuthModal({ show, onClose, onLoginGuest }: AuthModalProps) {
           onClick={signInWithDiscord}
           id="auth-discord-btn"
         >
-        <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/x.svg" alt="X Logo" width="20" height="20" />
+        <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/discord.svg" alt="Discord Logo" width="20" height="20" />
           Continue with Discord
         </button>
 

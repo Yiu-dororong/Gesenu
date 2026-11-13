@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithX = useCallback(async () => {
     await supabase.auth.signInWithOAuth({
-      provider: 'twitter',
+      provider: 'x',
       options: {
         redirectTo: window.location.origin,
       },
