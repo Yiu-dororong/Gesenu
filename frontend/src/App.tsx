@@ -38,6 +38,8 @@ import { StudySessionPage } from './pages/StudySessionPage';
 import { TestSetupPage } from './pages/TestSetupPage';
 import { TestSessionPage } from './pages/TestSessionPage';
 
+import { useAuth } from './context/authContext';
+
 export function App() {
   const notificationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMountedRef = useRef<boolean>(true);
@@ -52,15 +54,20 @@ export function App() {
     };
   }, []);
 
-  // Auth State
-  const [userMode, setUserMode] = useState<UserMode>('logged_out');
-  const [userEmail, setUserEmail] = useState<string>('');
-  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
-  const [authEmailInput, setAuthEmailInput] = useState<string>('');
-
   // Demo Mode State & API Client
   const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
   const apiClientRef = useRef<DemoAPI | null>(null);
+
+  // ---------------------------------------------------------------------------
+  // Auth — derived from Supabase session via AuthContext
+  // ---------------------------------------------------------------------------
+  const { session, user, signOut, getAccessToken, loading: authLoading } = useAuth();
+
+  // userMode: 'standard' when a real session exists, 'guest' for demo, 'logged_out' otherwise
+  const userMode: UserMode = session ? 'standard' : isDemoMode ? 'guest' : 'logged_out';
+  const userEmail: string = user?.email ?? (isDemoMode ? 'demo@gesenu.browser' : '');
+
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
 
   // Routing State
   const [currentPage, setCurrentPage] = useState<NavigationPage>('landing');
@@ -173,7 +180,11 @@ export function App() {
   const fetchTestWords = async () => {
     if (isDemoMode || apiClientRef.current?.isDemoMode) return;
     try {
-      const res = await fetch(`${API_BASE}/api/test-words`);
+      const token = getAccessToken();
+      const res = await fetch(`${API_BASE}/api/test-words`, {
+        credentials: 'include',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       if (!res.ok) throw new Error('API request failed');
       const data = await res.json();
       if (!isMountedRef.current) return;
@@ -200,12 +211,14 @@ export function App() {
     }
   };
 
+  // ---------------------------------------------------------------------------
+  // Auth handlers
+  // ---------------------------------------------------------------------------
+
   const handleStartDemoSession = async () => {
     const demo = new DemoAPI();
     apiClientRef.current = demo;
     setIsDemoMode(true);
-    setUserMode('guest');
-    setUserEmail('demo@gesenu.browser');
 
     const demoDecks = await demo.getDecks();
     const demoWords = await demo.getWords();
@@ -218,13 +231,30 @@ export function App() {
   };
 
   useEffect(() => {
+    // Wait until AuthContext has finished restoring the session from storage.
+    // This ensures getAccessToken() returns the real token (not null) when we fetch.
+    if (authLoading) return;
+
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('demo') === 'true' || urlParams.get('demo') === '1') {
       void handleStartDemoSession();
-    } else {
-      void fetchTestWords();
+      return;
     }
-  }, []);
+
+    // Post-OAuth redirect: Supabase sets the session before this effect runs.
+    // If we have a real session and we're still on the landing page, go to overview.
+    if (session && currentPage === 'landing') {
+      setCurrentPage('overview');
+      void fetchTestWords();
+      return;
+    }
+
+    // No session — just try to load words (will gracefully fail with 401 and use fallback).
+    if (!session) return;
+
+    void fetchTestWords();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, session]);
 
   // Auth Handlers
   const handleLoginGuest = () => {
@@ -232,22 +262,18 @@ export function App() {
     handleStartDemoSession();
   };
 
-  const handleLoginStandard = (e: FormEvent) => {
-    e.preventDefault();
-    if (!authEmailInput) return;
-    setUserMode('standard');
-    setUserEmail(authEmailInput);
-    setShowAuthModal(false);
-    setCurrentPage('overview');
-    fetchTestWords();
-    notify(`Welcome back, ${authEmailInput}!`);
-  };
+  // handleLoginStandard removed — real auth is handled by Supabase OAuth redirect
+  // (signInWithGoogle / signInWithDiscord in AuthModal via AuthContext).
+  // After the OAuth redirect completes, onAuthStateChange in AuthContext fires
+  // automatically and updates the session, which flows into userMode above.
 
-  const handleLogout = () => {
-    setUserMode('logged_out');
-    setUserEmail('');
-    setIsDemoMode(false);
-    apiClientRef.current = null;
+  const handleLogout = async () => {
+    if (isDemoMode) {
+      setIsDemoMode(false);
+      apiClientRef.current = null;
+    } else {
+      await signOut();
+    }
     setCurrentPage('landing');
     notify('Logged out successfully');
   };
@@ -446,9 +472,14 @@ export function App() {
 
     // Persist to backend /api/test-words API only when not in demo mode
     if (!isDemoMode && !apiClientRef.current?.isDemoMode) {
+      const token = getAccessToken();
       fetch(`${API_BASE}/api/test-words`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(newCard),
       }).catch(() => {
         // Local state fallback already updated
@@ -639,10 +670,7 @@ export function App() {
       {/* Auth Modal */}
       <AuthModal
         show={showAuthModal}
-        authEmailInput={authEmailInput}
-        setAuthEmailInput={setAuthEmailInput}
         onLoginGuest={handleLoginGuest}
-        onLoginStandard={handleLoginStandard}
         onClose={() => setShowAuthModal(false)}
       />
 

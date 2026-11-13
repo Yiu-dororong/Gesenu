@@ -18,8 +18,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from sudachipy import dictionary, tokenizer
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -29,6 +27,7 @@ log = logging.getLogger(__name__)
 
 # Initialize Sudachi dictionary & tokenizer singleton
 try:
+    from sudachipy import dictionary, tokenizer
     _SUDACHI_DICT = dictionary.Dictionary()
     _TOKENIZER = _SUDACHI_DICT.create()
     _SUDACHI_AVAILABLE = True

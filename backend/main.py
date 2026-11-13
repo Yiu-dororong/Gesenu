@@ -22,10 +22,11 @@ import os
 import sys
 from pathlib import Path
 
-from fastapi import FastAPI, Query
+from fastapi import Depends, FastAPI, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+from auth import make_auth_dependency
 from services.jisho_dict import lookup_word
 from services.sudachi_parser import parse_sentence
 
@@ -63,6 +64,41 @@ SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip()
 SUPABASE_KEY = (os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
                 or os.getenv("SUPABASE_ANON_KEY", "").strip())
 
+# Session & Cookie Lifetime Configuration
+SECONDS_PER_DAY = 86400  # 60 * 60 * 24
+try:
+    AUTH_COOKIE_MAX_DAYS = int(os.getenv("AUTH_COOKIE_MAX_DAYS", "7"))
+except ValueError:
+    AUTH_COOKIE_MAX_DAYS = 7
+AUTH_COOKIE_MAX_AGE = SECONDS_PER_DAY * AUTH_COOKIE_MAX_DAYS
+
+try:
+    REFRESH_COOKIE_MAX_DAYS = int(os.getenv("REFRESH_COOKIE_MAX_DAYS", "30"))
+except ValueError:
+    REFRESH_COOKIE_MAX_DAYS = 30
+REFRESH_COOKIE_MAX_AGE = SECONDS_PER_DAY * REFRESH_COOKIE_MAX_DAYS
+
+# CORS Configuration
+# Note: On Vercel, rewrites serve frontend & backend on the same origin
+# so CORS is not used.
+# For cross-origin scenarios (local dev or separate domain)
+# explicit origins are required.
+DEFAULT_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+env_origin = os.getenv("ALLOWED_ORIGIN", "").strip()
+ALLOWED_ORIGINS = list(DEFAULT_ALLOWED_ORIGINS)
+if env_origin:
+    for o in env_origin.split(","):
+        o_clean = o.strip()
+        if o_clean and o_clean not in ALLOWED_ORIGINS:
+            ALLOWED_ORIGINS.append(o_clean)
+
 supabase_client: Client | None = None
 if (HAS_SUPABASE
     and SUPABASE_URL
@@ -74,6 +110,11 @@ if (HAS_SUPABASE
     except Exception as e:
         log.warning("⚠️ Failed to initialize Supabase client: %s", e)
 
+# Auth dependency — bound to the client created above (avoids circular import)
+# Returns a callable: (credentials) -> {user_id, email}
+# Use as: Depends(get_current_user) on protected endpoints.
+get_current_user = make_auth_dependency(supabase_client)
+
 # ---------------------------------------------------------------------------
 # SECTION 1 — Data Models (OpenAPI Contracts)
 # ---------------------------------------------------------------------------
@@ -82,6 +123,12 @@ class HealthCheckStatus(BaseModel):
     app: str = Field(..., example="Gesenu API")
     version: str = Field(..., example="0.2.0")
     supabase_connected: bool = Field(..., example=True)
+
+
+class SessionPayload(BaseModel):
+    access_token: str
+    refresh_token: str | None = None
+
 
 
 class TokenItem(BaseModel):
@@ -169,15 +216,68 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173",
-                   "http://127.0.0.1:5173",
-                   "http://localhost:5174",
-                   "http://127.0.0.1:5174",
-                   "*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ---------------------------------------------------------------------------
+# Auth Session Management (HttpOnly Cookie endpoints)
+# ---------------------------------------------------------------------------
+@app.post("/api/auth/session", tags=["Auth"])
+def set_session_cookie(payload: SessionPayload, response: Response) -> dict:
+    """Set secure HttpOnly cookies for access and refresh tokens."""
+    # In Vercel or production HTTPS, secure cookies are mandatory.
+    # In local development without HTTPS, set secure=False so browser stores the cookie.
+    is_production = bool(
+        os.getenv("VERCEL") or os.getenv("ENVIRONMENT") == "production"
+    )
+
+    response.set_cookie(
+        key="sb_access_token",
+        value=payload.access_token,
+        httponly=True,
+        secure=is_production,
+        samesite="lax",
+        path="/api",
+        max_age=AUTH_COOKIE_MAX_AGE,
+    )
+    if payload.refresh_token:
+        response.set_cookie(
+            key="sb_refresh_token",
+            value=payload.refresh_token,
+            httponly=True,
+            secure=is_production,
+            samesite="lax",
+            path="/api/auth",
+            max_age=REFRESH_COOKIE_MAX_AGE,
+        )
+    return {"status": "ok", "message": "Session cookies established"}
+
+
+@app.post("/api/auth/logout", tags=["Auth"])
+def logout_session(response: Response) -> dict:
+    """Clear HttpOnly session cookies upon logout."""
+    is_production = bool(
+        os.getenv("VERCEL") or os.getenv("ENVIRONMENT") == "production"
+    )
+    response.delete_cookie(
+        key="sb_access_token",
+        path="/api",
+        httponly=True,
+        secure=is_production,
+        samesite="lax",
+    )
+    response.delete_cookie(
+        key="sb_refresh_token",
+        path="/api/auth",
+        httponly=True,
+        secure=is_production,
+        samesite="lax",
+    )
+    return {"status": "ok", "message": "Session cookies cleared"}
 
 
 @app.get("/api/health", response_model=HealthCheckStatus, tags=["Health"])
@@ -216,7 +316,7 @@ def dictionary_lookup(
 
 @app.get("/api/test-words", response_model=WordCardResponse, tags=["Vocabulary"])
 @app.get("/api/words", response_model=WordCardResponse, tags=["Vocabulary"])
-def get_words() -> WordCardResponse:
+def get_words(current_user: dict = Depends(get_current_user)) -> WordCardResponse:
     """Fetch Japanese vocabulary cards from Supabase PostgreSQL.
     Only falls back when server fails."""
     if supabase_client is not None:
@@ -248,7 +348,9 @@ def get_words() -> WordCardResponse:
 
 @app.post("/api/test-words", response_model=WordCard, tags=["Vocabulary"])
 @app.post("/api/words", response_model=WordCard, tags=["Vocabulary"])
-def create_word(word: WordCard) -> WordCard:
+def create_word(
+    word: WordCard, current_user: dict = Depends(get_current_user)
+    ) -> WordCard:
     """Create and save a new word card in Supabase PostgreSQL."""
     if supabase_client is not None:
         try:
