@@ -67,6 +67,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(newSession);
       if (newSession) {
         void syncSessionCookie(newSession);
+        // Clean up OAuth tokens / PKCE code from URL for a clean address bar
+        if (window.location.hash.includes('access_token=') || window.location.search.includes('code=')) {
+          window.history.replaceState(null, '', window.location.pathname);
+        }
       } else if (event === 'SIGNED_OUT') {
         void clearSessionCookie();
       }
