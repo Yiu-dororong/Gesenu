@@ -24,6 +24,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 try:
     import jwt
+
     HAS_PYJWT = True
 except ImportError:
     HAS_PYJWT = False

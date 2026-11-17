@@ -22,7 +22,7 @@ import httpx
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%H:%M:%S"
+    datefmt="%H:%M:%S",
 )
 log = logging.getLogger(__name__)
 
@@ -80,8 +80,9 @@ def lookup_word(keyword: str) -> dict[str, Any]:
                     if pos:
                         pos_tags.extend(pos)
 
-                meaning_str = (" | ".join(definitions) if definitions
-                               else "No definition found")
+                meaning_str = (
+                    " | ".join(definitions) if definitions else "No definition found"
+                )
 
                 # Format JLPT level (e.g. ['jlpt-n1'] -> "N1")
                 jlpt_level: str | None = None
@@ -98,8 +99,11 @@ def lookup_word(keyword: str) -> dict[str, Any]:
                     elif "n5" in tag:
                         jlpt_level = "N5"
 
-                log.info("✓ Jisho API returned entry for '%s' (%s)",
-                         primary_word, jlpt_level or "No JLPT")
+                log.info(
+                    "✓ Jisho API returned entry for '%s' (%s)",
+                    primary_word,
+                    jlpt_level or "No JLPT",
+                )
                 return {
                     "lemma": primary_word or keyword,
                     "reading": primary_reading,

@@ -1,11 +1,12 @@
 import type { GesenuAPI, ReviewFeedback, ReviewResult } from './types';
-import type { DeckItem, WordCard } from '../../types/app';
+import type { DeckItem, WordCard, DictLookupResponse } from '../../types/app';
 import { DEFAULT_DECKS, SEEDED_DEMO_CARDS, INITIAL_CARD_DECK_MAPPING } from '../../constants/decks';
 
 export class DemoAPI implements GesenuAPI {
   public readonly isDemoMode = true;
   private decks: DeckItem[] = [...DEFAULT_DECKS];
   private hasSimulatedFailureFired = false;
+  private dictCache = new Map<string, DictLookupResponse>();
 
   private cards: WordCard[] = [...SEEDED_DEMO_CARDS];
 
@@ -13,6 +14,23 @@ export class DemoAPI implements GesenuAPI {
 
   public getInitialCardDeckMapping(): Record<string, string> {
     return { ...this.cardDeckMap };
+  }
+
+  async lookupDictionary(keyword: string): Promise<DictLookupResponse> {
+    const clean = keyword.trim();
+    if (this.dictCache.has(clean)) {
+      return this.dictCache.get(clean)!;
+    }
+    const card = this.cards.find((c) => c.lemma === clean || c.surface_form === clean);
+    const result: DictLookupResponse = {
+      lemma: card?.lemma || clean,
+      reading: card?.reading || '',
+      meaning: card?.meaning || `Sample vocabulary definition for ${clean}`,
+      jlpt_level: card?.jlpt_level || 'N3',
+      found: true,
+    };
+    this.dictCache.set(clean, result);
+    return result;
   }
 
   async getDecks(): Promise<DeckItem[]> {

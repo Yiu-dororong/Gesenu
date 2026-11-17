@@ -105,3 +105,205 @@
 .status-Learning { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
 .status-Known { background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
 .status-Mastered { background: rgba(168, 85, 247, 0.16); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); }
+
+/* Learning Analytics & Stats Widget */
+.stats-widget-container {
+  background: rgba(25, 24, 27, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(242, 233, 218, 0.08);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.stats-widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.stats-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.stats-icon {
+  font-size: 1.15rem;
+}
+
+.stats-heading {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ivory);
+  letter-spacing: 0.02em;
+}
+
+.stats-toggle-icon {
+  font-size: 0.7rem;
+  color: var(--ivory-dim);
+  transition: transform 0.2s ease;
+}
+
+.stats-quick-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.summary-pill {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(242, 233, 218, 0.05);
+  border: 1px solid rgba(242, 233, 218, 0.1);
+  color: var(--ivory-dim);
+}
+
+.summary-pill strong {
+  color: var(--ivory);
+}
+
+.due-pill {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+}
+
+.due-pill strong {
+  color: #fbbf24;
+}
+
+.mastery-pill {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+
+.mastery-pill strong {
+  color: #34d399;
+}
+
+.stats-widget-body {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(242, 233, 218, 0.06);
+}
+
+.fsm-pipeline-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.fsm-stat-card {
+  background: rgba(242, 233, 218, 0.02);
+  border: 1px solid rgba(242, 233, 218, 0.08);
+  border-radius: 8px;
+  padding: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fsm-stat-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(242, 233, 218, 0.2);
+  background: rgba(242, 233, 218, 0.04);
+}
+
+.fsm-stat-card.active-filter {
+  outline: 2px solid var(--gold);
+  border-color: var(--gold);
+  background: rgba(199, 154, 68, 0.1);
+}
+
+.stat-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.fsm-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.stat-new .fsm-dot { background: #3b82f6; }
+.stat-learning .fsm-dot { background: #f59e0b; }
+.stat-known .fsm-dot { background: #10b981; }
+.stat-mastered .fsm-dot { background: #a855f7; }
+
+.fsm-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--ivory-dim);
+}
+
+.stat-card-count {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ivory);
+  line-height: 1.1;
+}
+
+.stat-card-pct {
+  font-size: 0.7rem;
+  color: var(--ivory-dim);
+  margin-top: 0.2rem;
+}
+
+.stats-bars-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.progress-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.progress-label-bar {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--ivory-dim);
+}
+
+.progress-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(242, 233, 218, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.retention-fill {
+  background: linear-gradient(90deg, #10b981, #a855f7);
+}
+
+.quota-fill {
+  background: #3b82f6;
+}
+
+.quota-fill.quota-warning {
+  background: #f59e0b;
+}

@@ -14,6 +14,9 @@ export type WordCard = components['schemas']['WordCard'] & {
   span_start?: number | null;
   span_end?: number | null;
   sentence_id?: string | null;
+  deck_id?: string | null;
+  next_review_at?: string | null;
+  last_reviewed_at?: string | null;
 };
 
 export type UserMode = 'logged_out' | 'guest' | 'standard';

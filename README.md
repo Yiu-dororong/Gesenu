@@ -68,7 +68,9 @@ Gesenu follows a simple loop: **Encounter → Study → Test**.
 | **Study UI & FSM** | ✅ Done | Hanafuda arc deck browser, flashcard session, FSM state pills, optimistic UI |
 | **Landing Page** | ✅ Done | Scrollytelling layout, 5-stage canvas animation, deck convergence |
 | **Recall Test** | ✅ Done | Masked-sentence fill-in-the-blank session |
-| **Auth** | 🔲 In progress | Supabase Auth (social login), protected endpoints |
+| **Auth & Multi-User Storage** | ✅ Done | Supabase Auth (social/email login), JWT guard, user-scoped DB persistence |
+| **Review Sync & Leitner SRS** | ✅ Done | `next_review_at` interval math, review telemetry, optimistic UI with rollback |
+| **Trial Quota & Testing** | ✅ Done | 1,000 word quota ceiling, 19/19 pytest suite, oxlint & Vite production build |
 | **Deployment** | ✅ Live | Frontend + backend on Vercel |
 
 <!-- Add a Quick Start session once containerization is done -->
@@ -91,4 +93,4 @@ If you are still building core vocabulary with textbooks, stick with those first
 
 ---
 
-*Last updated: 2026-08-08*
+*Last updated: 2026-11-17 (v1.0.0 Release)*

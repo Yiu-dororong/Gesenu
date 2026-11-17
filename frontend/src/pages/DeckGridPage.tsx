@@ -1,4 +1,5 @@
 import type { DeckItem, WordCard, NavigationPage } from '../types/app';
+import { StatsWidget } from '../components/StatsWidget';
 
 interface DeckGridPageProps {
   selectedDeckId: string;
@@ -90,6 +91,14 @@ export function DeckGridPage({
         </button>
       </div>
 
+      {/* Lightweight Analytics & SRS Overview */}
+      <StatsWidget
+        words={words}
+        selectedDeckId={selectedDeckId}
+        deckFilterStatus={deckFilterStatus}
+        onSelectStatusFilter={setDeckFilterStatus}
+      />
+
       {/* Filter Bar */}
       <div className="filter-bar">
         <span style={{ fontSize: '0.85rem', color: 'var(--ivory-dim)' }}>Filter by Status:</span>
@@ -106,35 +115,49 @@ export function DeckGridPage({
 
       {/* Cards Grid */}
       <div className="cards-grid">
-        {filteredWords.map((card, idx) => (
-          <div key={card.lemma || idx} className="word-card">
-            <div className="card-top">
-              <div>
-                <span className="jp-font" style={{ fontSize: '0.85rem', color: 'var(--gold)' }}>
-                  {card.reading}
-                </span>
-                <h4 className="jp-font" style={{ fontSize: '1.8rem', color: 'var(--ivory)' }}>
-                  {card.lemma}
-                </h4>
-              </div>
-              {card.jlpt_level && <span className="jlpt-badge">{card.jlpt_level}</span>}
-            </div>
-
-            <p style={{ color: 'var(--ivory-dim)', fontSize: '0.95rem', marginBottom: '1rem' }}>
-              {card.meaning}
+        {filteredWords.length === 0 ? (
+          <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3.5rem 1rem', color: 'var(--ivory-dim)' }}>
+            <p style={{ fontSize: '1.15rem', marginBottom: '0.75rem', color: 'var(--ivory)' }}>
+              📭 No vocabulary cards in this deck yet.
             </p>
-
-            <div className="card-footer">
-              <span style={{ fontSize: '0.75rem', color: 'var(--ivory-dim)' }}>Status</span>
-              <span
-                className={`badge-status status-${card.status}`}
-                onClick={() => onAdvanceFSM(card.lemma)}
-              >
-                {card.status} ➔
-              </span>
-            </div>
+            <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem', color: 'var(--ivory-dim)' }}>
+              Encounter sentences to parse and save words directly into this deck.
+            </p>
+            <button className="open-btn" onClick={() => onNavigate('encounter')}>
+              Encounter & Add Words →
+            </button>
           </div>
-        ))}
+        ) : (
+          filteredWords.map((card, idx) => (
+            <div key={card.lemma || idx} className="word-card">
+              <div className="card-top">
+                <div>
+                  <span className="jp-font" style={{ fontSize: '0.85rem', color: 'var(--gold)' }}>
+                    {card.reading}
+                  </span>
+                  <h4 className="jp-font" style={{ fontSize: '1.8rem', color: 'var(--ivory)' }}>
+                    {card.lemma}
+                  </h4>
+                </div>
+                {card.jlpt_level && <span className="jlpt-badge">{card.jlpt_level}</span>}
+              </div>
+
+              <p style={{ color: 'var(--ivory-dim)', fontSize: '0.95rem', marginBottom: '1rem' }}>
+                {card.meaning}
+              </p>
+
+              <div className="card-footer">
+                <span style={{ fontSize: '0.75rem', color: 'var(--ivory-dim)' }}>Status</span>
+                <span
+                  className={`badge-status status-${card.status}`}
+                  onClick={() => onAdvanceFSM(card.lemma)}
+                >
+                  {card.status} ➔
+                </span>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </main>
   );

@@ -1,4 +1,4 @@
-import type { DeckItem, WordCard } from '../../types/app';
+import type { DeckItem, WordCard, DictLookupResponse } from '../../types/app';
 
 export type ReviewFeedback = 'forgot' | 'hard' | 'good' | 'easy';
 
@@ -15,4 +15,6 @@ export interface GesenuAPI {
   getDecks(): Promise<DeckItem[]>;
   getWords(deckId?: string): Promise<WordCard[]>;
   submitReview(wordId: string, feedback: ReviewFeedback): Promise<ReviewResult>;
+  lookupDictionary?(keyword: string): Promise<DictLookupResponse>;
+  invalidateDecksCache?(): void;
 }

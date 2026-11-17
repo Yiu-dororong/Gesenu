@@ -21,13 +21,14 @@ from typing import Any
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%H:%M:%S"
+    datefmt="%H:%M:%S",
 )
 log = logging.getLogger(__name__)
 
 # Initialize Sudachi dictionary & tokenizer singleton
 try:
     from sudachipy import dictionary, tokenizer
+
     _SUDACHI_DICT = dictionary.Dictionary()
     _TOKENIZER = _SUDACHI_DICT.create()
     _SUDACHI_AVAILABLE = True
@@ -38,13 +39,13 @@ except Exception as e:
 
 # Parts of speech considered meaningful vocabulary candidates
 SELECTABLE_POS_HEADS = {
-    "名詞",      # Noun
-    "動詞",      # Verb
-    "形容詞",    # Adjective (i-adj)
-    "形状詞",    # Adjectival Noun (na-adj)
-    "副詞",      # Adverb
-    "連体詞",    # Pre-noun adjectival
-    "感動詞",    # Interjection
+    "名詞",  # Noun
+    "動詞",  # Verb
+    "形容詞",  # Adjective (i-adj)
+    "形状詞",  # Adjectival Noun (na-adj)
+    "副詞",  # Adverb
+    "連体詞",  # Pre-noun adjectival
+    "感動詞",  # Interjection
 }
 
 # Non-content words to exclude even if noun (e.g. formal nouns, symbols)
@@ -113,15 +114,17 @@ def parse_sentence(sentence: str) -> list[dict[str, Any]]:
             and not surface.isnumeric()
         )
 
-        parsed_result.append({
-            "surface": surface,
-            "lemma": lemma,
-            "reading": reading_hira or surface,
-            "pos": pos_primary,
-            "pos_detail": f"{pos_primary}-{pos_secondary}",
-            "span_start": token.begin(),
-            "span_end": token.end(),
-            "is_selectable": is_selectable,
-        })
+        parsed_result.append(
+            {
+                "surface": surface,
+                "lemma": lemma,
+                "reading": reading_hira or surface,
+                "pos": pos_primary,
+                "pos_detail": f"{pos_primary}-{pos_secondary}",
+                "span_start": token.begin(),
+                "span_end": token.end(),
+                "is_selectable": is_selectable,
+            }
+        )
 
     return parsed_result

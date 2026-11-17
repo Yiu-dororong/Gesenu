@@ -21,7 +21,8 @@ import {
 } from './constants/decks';
 
 import { DemoAPI } from './services/api/DemoAPI';
-import type { ReviewFeedback } from './services/api/types';
+import { LiveAPI } from './services/api/LiveAPI';
+import type { GesenuAPI, ReviewFeedback } from './services/api/types';
 
 import { Toast } from './components/Toast';
 import { Header } from './components/Header';
@@ -54,14 +55,23 @@ export function App() {
     };
   }, []);
 
-  // Demo Mode State & API Client
+  // Demo / Live API Client State
   const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
-  const apiClientRef = useRef<DemoAPI | null>(null);
+  const apiClientRef = useRef<GesenuAPI | null>(null);
 
   // ---------------------------------------------------------------------------
   // Auth — derived from Supabase session via AuthContext
   // ---------------------------------------------------------------------------
   const { session, user, signOut, getAccessToken, loading: authLoading } = useAuth();
+
+  // Wire LiveAPI whenever a real Supabase session is established
+  useEffect(() => {
+    if (session) {
+      apiClientRef.current = new LiveAPI(getAccessToken);
+    } else if (!isDemoMode) {
+      apiClientRef.current = null;
+    }
+  }, [session, isDemoMode, getAccessToken]);
 
   // userMode: 'standard' when a real session exists, 'guest' for demo, 'logged_out' otherwise
   const userMode: UserMode = session ? 'standard' : isDemoMode ? 'guest' : 'logged_out';
@@ -176,35 +186,36 @@ export function App() {
     }, duration);
   }, []);
 
-  // Fetch Test Words from Backend API (/api/test-words)
+  // Fetch Words & Decks from Backend API (/api/words & /api/decks)
   const fetchTestWords = async () => {
     if (isDemoMode || apiClientRef.current?.isDemoMode) return;
     try {
       const token = getAccessToken();
-      const res = await fetch(`${API_BASE}/api/test-words`, {
+      const res = await fetch(`${API_BASE}/api/words`, {
         credentials: 'include',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) throw new Error('API request failed');
       const data = await res.json();
       if (!isMountedRef.current) return;
-      if (data.words && data.words.length > 0) {
-        setWords((prev) => {
-          const fetchedLemmas = new Set(data.words.map((w: WordCard) => w.lemma));
-          const customOrRemaining = prev.filter((w) => !fetchedLemmas.has(w.lemma));
-          return [...data.words, ...customOrRemaining];
-        });
+      if (Array.isArray(data.words)) {
+        setWords(data.words);
 
-        // Assign newly fetched /api/test-words to 'unclassified' (未分類) if not already mapped
-        setCardDeckMapping((prev) => {
-          const updated = { ...prev };
-          data.words.forEach((w: WordCard) => {
-            if (!updated[w.lemma]) {
-              updated[w.lemma] = 'unclassified';
-            }
-          });
-          return updated;
+        // Assign card deck mappings directly from persisted deck_id
+        const updated: Record<string, string> = {};
+        data.words.forEach((w: WordCard) => {
+          updated[w.lemma] = w.deck_id || 'unclassified';
         });
+        setCardDeckMapping(updated);
+      }
+
+      // Sync decks from backend if available
+      if (apiClientRef.current) {
+        apiClientRef.current.getDecks().then((liveDecks) => {
+          if (liveDecks && liveDecks.length > 0 && isMountedRef.current) {
+            setDecks(liveDecks);
+          }
+        }).catch(() => {});
       }
     } catch {
       // Graceful fallback to seeded local demo cards
@@ -362,7 +373,20 @@ export function App() {
         return;
       }
 
-      // 3. Network Lookup (ONLY in Live mode, NOT in Demo mode)
+      // 3. Delegate to client-side cached API client lookup
+      if (apiClientRef.current?.lookupDictionary) {
+        try {
+          const cachedData = await apiClientRef.current.lookupDictionary(token.lemma);
+          if (cachedData && cachedData.found && isMountedRef.current) {
+            setDictInfo(cachedData);
+            return;
+          }
+        } catch {
+          // Client lookup failed, continue to fallback below
+        }
+      }
+
+      // 4. Network Lookup (ONLY in Live mode, NOT in Demo mode)
       if (!isDemoMode && !apiClientRef.current?.isDemoMode) {
         try {
           const res = await fetch(`${API_BASE}/api/dict/lookup?keyword=${encodeURIComponent(token.lemma)}`);
@@ -407,7 +431,7 @@ export function App() {
         }
       }
 
-      // 4. Clean fallback for unmapped words in offline mode
+      // 5. Clean fallback for unmapped words in offline mode
       if (isMountedRef.current) {
         setDictInfo({
           lemma: token.lemma,
@@ -424,7 +448,7 @@ export function App() {
     }
   };
 
-  const handleSaveCard = () => {
+  const handleSaveCard = (appendContext: boolean = true) => {
     if (!selectedToken) return;
 
     let targetDeckId = saveTargetDeckId;
@@ -448,32 +472,60 @@ export function App() {
       }
     }
 
+    const targetLemma = dictInfo?.lemma || selectedToken.lemma;
+    const existingCard = words.find((w) => w.lemma === targetLemma);
+
     const contextSent = parseResult?.sentence || sentenceInput;
+    let finalSentence = contextSent;
+    let finalStatus = 'New';
+    let finalDeckId = targetDeckId;
+
+    if (existingCard) {
+      if (
+        appendContext &&
+        existingCard.context_sentence &&
+        !existingCard.context_sentence.includes(contextSent)
+      ) {
+        finalSentence = `${existingCard.context_sentence}\n${contextSent}`;
+      }
+      finalStatus = existingCard.status || 'New';
+      if (targetDeckId === 'unclassified' && existingCard.deck_id) {
+        finalDeckId = existingCard.deck_id;
+      }
+    }
+
     const newCard: WordCard = {
-      lemma: dictInfo?.lemma || selectedToken.lemma,
-      surface_form: selectedToken.surface || dictInfo?.lemma || selectedToken.lemma,
+      ...(existingCard || {}),
+      lemma: targetLemma,
+      surface_form: selectedToken.surface || targetLemma,
       span_start: selectedToken.span_start,
       span_end: selectedToken.span_end,
-      sentence_id: getSentenceId(contextSent),
-      reading: dictInfo?.reading || selectedToken.reading || '',
-      meaning: dictInfo?.meaning || 'Saved vocabulary card',
-      jlpt_level: dictInfo?.jlpt_level || 'N3',
-      context_sentence: contextSent,
-      status: 'New',
+      sentence_id: existingCard?.sentence_id || getSentenceId(finalSentence),
+      reading: dictInfo?.reading || selectedToken.reading || existingCard?.reading || '',
+      meaning: dictInfo?.meaning || existingCard?.meaning || 'Saved vocabulary card',
+      jlpt_level: dictInfo?.jlpt_level || existingCard?.jlpt_level || 'N3',
+      context_sentence: finalSentence,
+      status: finalStatus,
+      deck_id: finalDeckId,
     };
 
     setWords((prev) => [newCard, ...prev.filter((w) => w.lemma !== newCard.lemma)]);
-    setCardDeckMapping((prev) => ({ ...prev, [newCard.lemma]: targetDeckId }));
+    setCardDeckMapping((prev) => ({ ...prev, [newCard.lemma]: finalDeckId }));
+
+    // Invalidate decks cache in LiveAPI so deck counts refresh
+    if (apiClientRef.current?.invalidateDecksCache) {
+      apiClientRef.current.invalidateDecksCache();
+    }
 
     // Sync to in-memory DemoAPI if in demo mode
     if (apiClientRef.current && 'addCard' in apiClientRef.current) {
-      (apiClientRef.current as { addCard: (c: WordCard, d: string) => void }).addCard(newCard, targetDeckId);
+      (apiClientRef.current as { addCard: (c: WordCard, d: string) => void }).addCard(newCard, finalDeckId);
     }
 
-    // Persist to backend /api/test-words API only when not in demo mode
+    // Persist to backend /api/words API only when not in demo mode
     if (!isDemoMode && !apiClientRef.current?.isDemoMode) {
       const token = getAccessToken();
-      fetch(`${API_BASE}/api/test-words`, {
+      fetch(`${API_BASE}/api/words`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -481,17 +533,43 @@ export function App() {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(newCard),
-      }).catch(() => {
-        // Local state fallback already updated
-      });
+      })
+        .then(async (res) => {
+          if (res.status === 403) {
+            const data = await res.json().catch(() => ({}));
+            notify(`⚠️ Quota limit: ${data.detail || 'Maximum of 1,000 words reached on trial tier'}`);
+            // Rollback optimistic save
+            setWords((prev) => prev.filter((w) => w.lemma !== newCard.lemma));
+            setCardDeckMapping((prev) => {
+              const updated = { ...prev };
+              delete updated[newCard.lemma];
+              return updated;
+            });
+            return;
+          }
+          if (!res.ok) {
+            console.warn(`[SaveCard] Backend returned status ${res.status}`);
+          }
+        })
+        .catch((err) => {
+          console.warn('[SaveCard] Failed to persist card to backend:', err);
+        });
     }
 
     const targetDeckName =
-      targetDeckId === 'unclassified'
+      finalDeckId === 'unclassified'
         ? 'Unclassified'
-        : decks.find((d) => d.id === targetDeckId)?.jp || targetDeckId;
+        : decks.find((d) => d.id === finalDeckId)?.jp || finalDeckId;
 
-    notify(`Saved "${newCard.lemma}" to [${targetDeckName}] deck!`);
+    if (existingCard) {
+      notify(`Updated context for "${newCard.lemma}" in [${targetDeckName}] deck!`);
+    } else {
+      notify(`Saved "${newCard.lemma}" to [${targetDeckName}] deck!`);
+    }
+
+    if (words.length >= 900 && words.length < 1000) {
+      notify(`ℹ️ Quota Notice: ${words.length + 1} / 1,000 words used on trial tier.`);
+    }
     setSelectedToken(null);
     setDictInfo(null);
   };
@@ -744,6 +822,7 @@ export function App() {
           saveTargetDeckId={saveTargetDeckId}
           setSaveTargetDeckId={setSaveTargetDeckId}
           decks={decks}
+          words={words}
           isDemoMode={isDemoMode}
           onNavigate={setCurrentPage}
           onParseSentence={handleParseSentence}
