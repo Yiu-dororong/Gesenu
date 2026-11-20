@@ -8,7 +8,16 @@
 
 import type { GesenuAPI, ReviewFeedback, ReviewResult } from './types';
 import type { DeckItem, WordCard, DictLookupResponse } from '../../types/app';
-import { API_BASE, DEFAULT_DECKS } from '../../constants/decks';
+import { API_BASE } from '../../constants/decks';
+
+const FALLBACK_SIGNED_IN_DECKS: DeckItem[] = [
+  {
+    id: 'unclassified',
+    jp: '未分類',
+    en: 'Unclassified',
+    color: 'var(--ink-surface)',
+  },
+];
 
 export class LiveAPI implements GesenuAPI {
   public readonly isDemoMode = false;
@@ -57,15 +66,11 @@ export class LiveAPI implements GesenuAPI {
       if (data.decks && data.decks.length > 0) {
         const mappedDecks = data.decks.map(
           (d: { id: string; name: string; jp_label?: string; color_slug?: string }) => {
-            const matchDefault = DEFAULT_DECKS.find(
-              (def) => def.id === d.name || def.id === d.id
-            );
             return {
-              id: d.name || d.id,
-              jp: d.jp_label || matchDefault?.jp || d.name,
+              id: d.id || d.name,
+              jp: d.jp_label || d.name,
               en: d.name.charAt(0).toUpperCase() + d.name.slice(1),
-              color: d.color_slug || matchDefault?.color || 'var(--wave)',
-              motifSvg: matchDefault?.motifSvg,
+              color: d.color_slug || 'var(--wave)',
             };
           }
         );
@@ -73,9 +78,9 @@ export class LiveAPI implements GesenuAPI {
         return mappedDecks;
       }
     } catch {
-      // Fallback to default decks
+      // Fallback for signed-in users: unclassified deck only (not guest test decks)
     }
-    return DEFAULT_DECKS;
+    return FALLBACK_SIGNED_IN_DECKS;
   }
 
   async lookupDictionary(keyword: string): Promise<DictLookupResponse> {

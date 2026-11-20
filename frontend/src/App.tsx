@@ -12,9 +12,7 @@ import {
   API_BASE,
   NEXT_STATUS,
   SAMPLE_SENTENCES,
-  DEFAULT_DECKS,
   SEEDED_DEMO_CARDS,
-  INITIAL_CARD_DECK_MAPPING,
   DEMO_PARSE_MAP,
   getSentenceId,
   interleaveCardsBySentence,
@@ -82,15 +80,13 @@ export function App() {
   // Routing State
   const [currentPage, setCurrentPage] = useState<NavigationPage>('landing');
 
-  // Decks & Cards Collection State
-  const [decks, setDecks] = useState<DeckItem[]>(DEFAULT_DECKS);
-  const [words, setWords] = useState<WordCard[]>(SEEDED_DEMO_CARDS);
-  const [cardDeckMapping, setCardDeckMapping] = useState<Record<string, string>>(
-    INITIAL_CARD_DECK_MAPPING
-  );
+  // Decks & Cards Collection State (Guest mode uses demo decks/cards; signed-in users load from backend)
+  const [decks, setDecks] = useState<DeckItem[]>([]);
+  const [words, setWords] = useState<WordCard[]>([]);
+  const [cardDeckMapping, setCardDeckMapping] = useState<Record<string, string>>({});
 
   // Selected Deck View State
-  const [selectedDeckId, setSelectedDeckId] = useState<string>('work');
+  const [selectedDeckId, setSelectedDeckId] = useState<string>('unclassified');
   const [deckFilterStatus, setDeckFilterStatus] = useState<string>('all');
 
   // New Deck Creation State
@@ -207,18 +203,27 @@ export function App() {
           updated[w.lemma] = w.deck_id || 'unclassified';
         });
         setCardDeckMapping(updated);
+      } else {
+        setWords([]);
       }
 
-      // Sync decks from backend if available
-      if (apiClientRef.current) {
-        apiClientRef.current.getDecks().then((liveDecks) => {
+      // Sync decks from backend if available (excluding guest test deck sets)
+      const liveClient = apiClientRef.current || (session ? new LiveAPI(getAccessToken) : null);
+      if (liveClient) {
+        liveClient.getDecks().then((liveDecks) => {
           if (liveDecks && liveDecks.length > 0 && isMountedRef.current) {
             setDecks(liveDecks);
+            setSelectedDeckId((prev) =>
+              liveDecks.some((d) => d.id === prev) ? prev : liveDecks[0]?.id || 'unclassified'
+            );
           }
         }).catch(() => {});
       }
     } catch {
-      // Graceful fallback to seeded local demo cards
+      // For signed-in users, do not fall back to guest demo cards
+      if (isMountedRef.current) {
+        setWords([]);
+      }
     }
   };
 
@@ -236,6 +241,7 @@ export function App() {
     setDecks(demoDecks);
     setWords(demoWords);
     setCardDeckMapping(demo.getInitialCardDeckMapping());
+    setSelectedDeckId(demoDecks[0]?.id || 'work');
 
     setCurrentPage('overview');
     notify('Browser Demo Mode (In-Memory)');
@@ -285,6 +291,9 @@ export function App() {
     } else {
       await signOut();
     }
+    setWords([]);
+    setDecks([]);
+    setCardDeckMapping({});
     setCurrentPage('landing');
     notify('Logged out successfully');
   };
@@ -355,10 +364,12 @@ export function App() {
         return;
       }
 
-      // 2. Check existing cards / SEEDED_DEMO_CARDS
+      // 2. Check existing cards / SEEDED_DEMO_CARDS (demo mode only for seeded)
       const existingCard =
         words.find((w) => w.lemma === token.lemma || w.surface_form === token.surface) ||
-        SEEDED_DEMO_CARDS.find((c) => c.lemma === token.lemma || c.surface_form === token.surface);
+        (isDemoMode
+          ? SEEDED_DEMO_CARDS.find((c) => c.lemma === token.lemma || c.surface_form === token.surface)
+          : undefined);
 
       if (existingCard) {
         if (isMountedRef.current) {
@@ -577,12 +588,26 @@ export function App() {
   // Deck Creation Handler
   const handleCreateNewDeck = (e: FormEvent) => {
     e.preventDefault();
-    if (!newDeckJp || !newDeckEn) return;
+    const trimmedJp = newDeckJp.trim();
+    const trimmedEn = newDeckEn.trim();
+    if (!trimmedJp || !trimmedEn) return;
+
+    // Check duplicate deck name
+    const isDuplicate = decks.some(
+      (d) =>
+        d.en.trim().toLowerCase() === trimmedEn.toLowerCase() ||
+        d.jp.trim().toLowerCase() === trimmedJp.toLowerCase() ||
+        d.id.trim().toLowerCase() === trimmedEn.toLowerCase()
+    );
+    if (isDuplicate) {
+      notify(`A deck named "${trimmedEn}" or "${trimmedJp}" already exists.`);
+      return;
+    }
 
     const newDeck: DeckItem = {
       id: `custom_${Date.now()}`,
-      jp: newDeckJp,
-      en: newDeckEn,
+      jp: trimmedJp,
+      en: trimmedEn,
       color: newDeckColor,
       motifSvg: (
         <svg className="motif" viewBox="0 0 40 40" fill="none">

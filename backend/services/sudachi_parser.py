@@ -30,7 +30,11 @@ try:
     from sudachipy import dictionary, tokenizer
 
     _SUDACHI_DICT = dictionary.Dictionary()
-    _TOKENIZER = _SUDACHI_DICT.create()
+    _TOKENIZER = (
+        _SUDACHI_DICT.tokenizer()
+        if hasattr(_SUDACHI_DICT, "tokenizer")
+        else _SUDACHI_DICT.create()
+    )
     _SUDACHI_AVAILABLE = True
     log.info("✓ SudachiPy dictionary initialized successfully.")
 except Exception as e:
@@ -38,18 +42,28 @@ except Exception as e:
     log.warning("⚠️ Failed to initialize SudachiPy: %s", e)
 
 # Parts of speech considered meaningful vocabulary candidates
+# Notes on UniDic / SudachiPy taxonomy:
+# - '形状詞' (keijōshi) is the official UniDic POS head for na-adjectives
+# - '代名詞' (pronouns) are separated from '名詞' into their own top-level POS head
 SELECTABLE_POS_HEADS = {
     "名詞",  # Noun
+    "代名詞",  # Pronoun (e.g. これ, 私, 彼)
     "動詞",  # Verb
     "形容詞",  # Adjective (i-adj)
-    "形状詞",  # Adjectival Noun (na-adj)
+    "形状詞",  # Adjectival Noun / na-adj (UniDic standard for na-keiyoushi)
     "副詞",  # Adverb
     "連体詞",  # Pre-noun adjectival
+    "接続詞",  # Conjunction (e.g. そして, しかし)
     "感動詞",  # Interjection
 }
 
-# Non-content words to exclude even if noun (e.g. formal nouns, symbols)
-EXCLUDED_POS_SUBDETAILS = {"補助記号", "助詞", "助動詞", "数詞"}
+# Sub-categories (pos_secondary) to exclude
+# even if primary POS is in SELECTABLE_POS_HEADS
+EXCLUDED_POS_SUBDETAILS = {
+    "数詞",  # Numerals under 名詞 (e.g. 123, 一)
+    "助動詞語幹",  # Auxiliary stems under 名詞 / 形状詞
+    "フィラー",  # Vocal fillers under 感動詞 (e.g. えーと)
+}
 
 
 def katakana_to_hiragana(katakana_str: str) -> str:

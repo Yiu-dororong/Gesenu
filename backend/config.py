@@ -55,25 +55,8 @@ if env_origin:
         if o_clean and o_clean not in ALLOWED_ORIGINS:
             ALLOWED_ORIGINS.append(o_clean)
 
+# Standard default deck for signed-in users (guest test decks like work/leisure/life are excluded)
 DEFAULT_DECKS_SPEC = [
-    {
-        "name": "work",
-        "jp_label": "仕事",
-        "color_slug": "var(--pine)",
-        "is_unclassified": False,
-    },
-    {
-        "name": "leisure",
-        "jp_label": "余暇",
-        "color_slug": "var(--sakura)",
-        "is_unclassified": False,
-    },
-    {
-        "name": "life",
-        "jp_label": "生活",
-        "color_slug": "var(--moon)",
-        "is_unclassified": False,
-    },
     {
         "name": "unclassified",
         "jp_label": "未分類",

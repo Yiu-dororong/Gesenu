@@ -46,10 +46,29 @@ def test_parse_sentence_empty():
 
 
 def test_parse_sentence_selectability_filter():
-    sentence = "これは123本のペンです。"
+    sentence = "これは123本のペンです。静かで綺麗だ。"
     tokens = parse_sentence(sentence)
+
+    token_map = {t["surface"]: t for t in tokens}
 
     # Numbers like '123' must not be selectable
     for t in tokens:
         if t["surface"].isnumeric():
             assert not t["is_selectable"]
+
+    # Pronouns (代名詞) should be selectable
+    assert token_map["これ"]["pos"] == "代名詞"
+    assert token_map["これ"]["is_selectable"] is True
+
+    # Nouns and na-adjectives (形状詞) should be selectable
+    assert token_map["ペン"]["is_selectable"] is True
+    assert token_map["静か"]["pos"] == "形状詞"
+    assert token_map["静か"]["is_selectable"] is True
+    assert token_map["綺麗"]["pos"] == "形状詞"
+    assert token_map["綺麗"]["is_selectable"] is True
+
+    # Particles and auxiliaries must not be selectable
+    assert token_map["は"]["is_selectable"] is False
+    assert token_map["の"]["is_selectable"] is False
+    assert token_map["です"]["is_selectable"] is False
+    assert token_map["だ"]["is_selectable"] is False
